@@ -36,7 +36,7 @@
       }
     };
   }
-  function generateNotes(minOct = 2, maxOct = 6, baseOct = 4, flatNum = 1, sharpNum = 1) {
+  function generateNotes(baseNoteName = "A4", minOct = 2, maxOct = 6, baseOct = 4, flatNum = 1, sharpNum = 1) {
     const names = ["C", "D", "E", "F", "G", "A", "B"];
     const diatonic = [
       { name: "C", oct: baseOct, monzo: { m: 0, n: 0 } },
@@ -72,10 +72,22 @@
         notes2.push(addOctave(note, octDiff));
       }
     }
+    const baseNote = notes2.find((note) => `${note.name}${note.oct}` === baseNoteName);
+    if (!baseNote) {
+      throw new Error(`Base note ${baseNoteName} not found`);
+    }
     return notes2.sort((a, b) => {
       const aVal = Math.pow(2, a.monzo.m) * Math.pow(3, a.monzo.n);
       const bVal = Math.pow(2, b.monzo.m) * Math.pow(3, b.monzo.n);
       return aVal - bVal;
+    }).map((note) => {
+      return {
+        ...note,
+        monzo: {
+          m: note.monzo.m - baseNote.monzo.m,
+          n: note.monzo.n - baseNote.monzo.n
+        }
+      };
     });
   }
 
@@ -272,8 +284,8 @@
   }
 
   // src/main.ts
-  var notes = generateNotes(1, 7, 4, 2, 2);
-  var val = makeVal_fromP(17, 27, 2, 440);
+  var notes = generateNotes("A4", 1, 7, 4, 2, 2);
+  var val = makeVal_asIrrational(2, 3, 440);
   var matrix = { a: 1, b: -2, c: 2, d: -3 };
   var scale = 100;
   for (const note of notes) {

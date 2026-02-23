@@ -7,7 +7,7 @@ import { drawOctoveGrid, drawNote } from "./renderer";
 import { scaleMatrix } from "./matrix";
 import { onMouseDown, onMouseMoved, onMouseUp } from "./player";
 
-const notes = generateNotes(1, 7, 4, 2, 2);
+const notes = generateNotes("A4", 1, 7, 4, 2, 2);
 
 //const val = makeVal_fromP(12, 19, 2, 440);
 //const val = makeVal_fromP(17, 27, 2, 440);

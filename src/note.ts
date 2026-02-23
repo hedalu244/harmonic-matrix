@@ -1,6 +1,4 @@
-import type p5_ from "p5";
 import { getFrequency, Monzo, Val } from "./monzo";
-import { Vector, Matrix, applyMatrix } from "./matrix";
 
 export interface Note {
     name: string,
@@ -46,10 +44,9 @@ function addSharp(Note: Note, n: number): Note {
     }
 }
 
-export function generateNotes(minOct = 2, maxOct = 6, baseOct = 4, flatNum = 1, sharpNum = 1): Note[] {
+export function generateNotes(baseNoteName = "A4", minOct = 2, maxOct = 6, baseOct = 4, flatNum = 1, sharpNum = 1): Note[] {
     const names = ["C", "D", "E", "F", "G", "A", "B"];
 
-    // 12,19でstepを検算
     const diatonic: Note[] = [
         { name: "C", oct: baseOct, monzo: { m: 0, n: 0 } }, // 0
         { name: "D", oct: baseOct, monzo: { m: -3, n: 2 } }, // -36 + 38 = 2
@@ -80,9 +77,23 @@ export function generateNotes(minOct = 2, maxOct = 6, baseOct = 4, flatNum = 1, 
         }
     }
 
+    const baseNote = notes.find(note => `${note.name}${note.oct}` === baseNoteName);
+    if (!baseNote) {
+        throw new Error(`Base note ${baseNoteName} not found`);
+    }
+
     return notes.sort((a, b) => {
         const aVal = Math.pow(2, a.monzo.m) * Math.pow(3, a.monzo.n);
         const bVal = Math.pow(2, b.monzo.m) * Math.pow(3, b.monzo.n);
         return aVal - bVal;
+    }).map(note => {
+        // basenoteとの相対的なmonzoに変換
+        return {
+            ...note,
+            monzo:{
+                m: note.monzo.m - baseNote.monzo.m,
+                n: note.monzo.n - baseNote.monzo.n,
+            }
+        };
     });
 }
