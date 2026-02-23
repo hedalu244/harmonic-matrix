@@ -41,17 +41,18 @@ export function drawNote(p5: p5_, note: Note, matrix: Matrix, val: Val) {
     }
 
     p5.textAlign(p5.CENTER, p5.CENTER);
-    p5.textSize(30);
     p5.fill(255);
     p5.noStroke()
+
     p5.textSize(25);
     p5.text(`${note.name}${note.oct}`, pos.x, pos.y - 15);
+    
     p5.textSize(15);
     if (val.p !== null && val.q !== null) {
-        p5.text(`\n［${note.monzo.m} ${note.monzo.n}〉= ${getSteps(val, note.monzo)} \n ${getFrequency(note.monzo, val).toFixed(1)}Hz`, pos.x, pos.y + 10);
+        p5.text(`［${note.monzo.m} ${note.monzo.n}〉= ${getSteps(val, note.monzo)} \n ${getFrequency(note.monzo, val).toFixed(1)}Hz`, pos.x, pos.y + 20);
     }
     else {
-        p5.text(`\n［${note.monzo.m} ${note.monzo.n}〉 \n ${getFrequency(note.monzo, val).toFixed(1)}Hz`, pos.x, pos.y + 10);
+        p5.text(`［${note.monzo.m} ${note.monzo.n}〉 \n ${getFrequency(note.monzo, val).toFixed(1)}Hz`, pos.x, pos.y + 20);
     }
     p5.pop();
 }
