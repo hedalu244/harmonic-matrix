@@ -1,0 +1,17 @@
+{
+  "name": "harmonic-matrix",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "debug": "concurrently \"tsc -w --noEmit\" \"esbuild src/main.ts --bundle --outfile=public/main.js --sourcemap --watch\"",
+    "build": "esbuild src/main.ts --bundle --outfile=public/main.js --minify",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/p5": "^1.7.7"
+  }
+}

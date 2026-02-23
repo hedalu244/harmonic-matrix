@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../src/main.ts"],
+  "sourcesContent": ["import type p5_ from \"p5\"; // \u30A4\u30F3\u30B9\u30BF\u30F3\u30B9\u306E\u578B\u540D\u306Fp5\u3060\u3068\u2193\u3068\u88AB\u308B\u306E\u3067\u30BA\u30E9\u3059\r\ndeclare const p5: typeof p5_; // \u5916\u90E8\u3067\u5024\u3068\u3057\u3066\u306Ep5\u304C\u5B9F\u88C5\u3055\u308C\u3066\u3044\u308B\u3053\u3068\u3092\u5BA3\u8A00\r\n\r\n// p5\u306E\u30A4\u30F3\u30B9\u30BF\u30F3\u30B9\u30E2\u30FC\u30C9\u3067\u66F8\u304F\r\nconst sketch = (p: p5_) => {\r\n  p.setup = () => {\r\n    p.createCanvas(640, 480);\r\n  };\r\n  p.draw = () => {\r\n    p.background(220);\r\n    p.fill(0);\r\n    p.ellipse(p.width/2, p.height/2, 100, 100);\r\n  };\r\n};\r\n\r\nnew p5(sketch);"],
+  "mappings": ";;AAIA,MAAM,SAAS,CAAC,MAAW;AACzB,MAAE,QAAQ,MAAM;AACd,QAAE,aAAa,KAAK,GAAG;AAAA,IACzB;AACA,MAAE,OAAO,MAAM;AACb,QAAE,WAAW,GAAG;AAChB,QAAE,KAAK,CAAC;AACR,QAAE,QAAQ,EAAE,QAAM,GAAG,EAAE,SAAO,GAAG,KAAK,GAAG;AAAA,IAC3C;AAAA,EACF;AAEA,MAAI,GAAG,MAAM;",
+  "names": []
+}
