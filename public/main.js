@@ -87,10 +87,8 @@
     if (val2.p === null || val2.q === null) return null;
     return monzo.m * val2.p + monzo.n * val2.q;
   }
-  function makeVal_fromP(p, q, P, baseFreq) {
-    const S = Math.pow(P, 1 / p);
-    const Q = Math.pow(S, q);
-    return { P, Q, S, p, q, baseFreq };
+  function makeVal_asIrrational(P, Q, baseFreq) {
+    return { P, Q, S: null, p: null, q: null, baseFreq };
   }
 
   // src/matrix.ts
@@ -249,6 +247,29 @@
  ${getFrequency(note.monzo, val2).toFixed(1)}Hz`, pos.x, pos.y + 10);
     p52.pop();
   }
+  function drawOctoveGrid(p52, val2, matrix2, color = 200) {
+    p52.push();
+    const incline = applyMatrix(matrix2, { x: Math.log(val2.Q), y: -Math.log(val2.P) });
+    const octove = applyMatrix(matrix2, { x: 1, y: 0 });
+    const scale2 = 100;
+    const num = 5;
+    p52.stroke(color);
+    p52.line(
+      -octove.x * scale2,
+      -octove.y * scale2,
+      octove.x * scale2,
+      octove.y * scale2
+    );
+    for (let i = -num; i <= num; i++) {
+      p52.line(
+        -incline.x * scale2 + octove.x * i,
+        -incline.y * scale2 + octove.y * i,
+        incline.x * scale2 + octove.x * i,
+        incline.y * scale2 + octove.y * i
+      );
+    }
+    p52.pop();
+  }
 
   // src/main.ts
   var notes = generateNotes(1, 7, 4, 2, 2);
@@ -269,6 +290,8 @@
     p.draw = () => {
       p.background(30);
       p.translate(p.width / 2, p.height / 2);
+      drawOctoveGrid(p, val, scaleMatrix(matrix, scale));
+      drawOctoveGrid(p, makeVal_asIrrational(2, 3, 440), scaleMatrix(matrix, scale), 100);
       notes.forEach((note) => {
         drawNote(p, note, scaleMatrix(matrix, scale), val);
       });
