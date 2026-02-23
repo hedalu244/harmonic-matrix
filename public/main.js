@@ -101,6 +101,55 @@
     };
   }
 
+  // src/oklch.ts
+  function dot(a, b) {
+    return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+  }
+  function linearConversion(mat, vec) {
+    return mat.map((row) => dot(row, vec));
+  }
+  function LCHtoLAB(lch) {
+    let [l, c, h] = lch;
+    const a = c * Math.cos(h / 180 * Math.PI);
+    const b = c * Math.sin(h / 180 * Math.PI);
+    return [l, a, b];
+  }
+  function LABtoLMS_(lab) {
+    const M2_INV = [
+      [1, 0.3963377774, 0.2158037573],
+      [1, -0.1055613458, -0.0638541728],
+      [1, -0.0894841775, -1.291485548]
+    ];
+    return linearConversion(M2_INV, lab);
+  }
+  function LMStoLRGB(lms) {
+    const M1_INV = [
+      [4.0767416621, -3.3077115913, 0.2309699292],
+      [-1.2684380046, 2.6097574011, -0.3413193965],
+      [-0.0041960863, -0.7034186147, 1.707614701]
+    ];
+    return linearConversion(M1_INV, lms);
+  }
+  function LRGBtoSRGB(lrgb) {
+    return lrgb.map((c) => {
+      const abs = Math.abs(c);
+      return abs > 31308e-7 ? (Math.sign(c) || 1) * (1.055 * Math.pow(abs, 1 / 2.4) - 0.055) : c * 12.92;
+    });
+  }
+  function oklchToSrgb(lch) {
+    const lab = LCHtoLAB(lch);
+    const lms_ = LABtoLMS_(lab);
+    const lms = lms_.map((c) => c * c * c);
+    const lrgb = LMStoLRGB(lms);
+    const srgb = LRGBtoSRGB(lrgb);
+    return srgb;
+  }
+  function oklch(p52, l, c, h) {
+    const [r, g, b] = oklchToSrgb([l, c, h]);
+    p52.colorMode(p52.RGB, 255);
+    return p52.color(r * 255, g * 255, b * 255);
+  }
+
   // src/renderer.ts
   var radius = 30;
   function noteToPos(note, matrix) {
@@ -114,21 +163,20 @@
     return a - b * Math.floor(a / b);
   }
   function noteToHue(note) {
-    return fmod(note.monzo.n * Math.log(3) / Math.log(2) * 360, 360);
+    return fmod(note.monzo.n * Math.log(3) / Math.log(2) * 360 + 20, 360);
   }
   function drawNote(p52, note, matrix, val2) {
     p52.push();
     const hue = noteToHue(note);
     const pos = noteToPos(note, matrix);
-    p52.colorMode(p52.HSB);
-    p52.fill(hue, 100, 50);
-    p52.stroke(hue, 100, 100);
+    p52.fill(oklch(p52, 0.4, 0.2, hue));
+    p52.stroke(oklch(p52, 0.8, 0.2, hue));
     p52.circle(pos.x, pos.y, radius * 2);
     p52.textAlign(p52.CENTER, p52.CENTER);
     p52.textSize(30);
     p52.fill(255);
     p52.noStroke();
-    p52.textSize(30);
+    p52.textSize(25);
     p52.text(`${note.name}${note.oct}`, pos.x, pos.y - 15);
     p52.textSize(15);
     p52.text(`
