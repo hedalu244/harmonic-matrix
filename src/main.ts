@@ -4,16 +4,21 @@ declare const p5: typeof p5_; // 外部で値としてのp5が実装されてい
 import { generateNotes, Note } from "./note";
 import { getSteps, makeVal_fromP } from "./monzo";
 import { drawNote } from "./renderer";
+import { scaleMatrix } from "./matrix";
+import { onMouseDown, onMouseMoved, onMouseUp } from "./player";
 
-const notes = generateNotes(2, 6, 4, 2, 2);
+const notes = generateNotes(1, 7, 4, 2, 2);
+
 const val = makeVal_fromP(17, 27, 2, 440);
+const matrix = { a: 1, b: -2, c: 2, d: -3 };
+const scale = 100;
 
+// デバッグ出力
 for (const note of notes) {
     const steps = getSteps(val, note.monzo);
     console.log(note, steps);
 }
 
-// p5のインスタンスモードで書く
 const sketch = (p: p5_) => {
     p.setup = () => {
         p.createCanvas(p.windowWidth, p.windowHeight);
@@ -24,11 +29,20 @@ const sketch = (p: p5_) => {
     p.draw = () => {
         p.background(30);
         p.translate(p.width / 2, p.height / 2);
-        const scale = 80;
         notes.forEach(note => {
-            drawNote(p, note, {a: 1 * scale, b: -2 * scale, c: 1 * scale, d: -3 * scale}, val);
+            drawNote(p, note, scaleMatrix(matrix, scale), val);
         });
     };
+
+    p.mousePressed = () => {
+        onMouseDown(p, notes, scaleMatrix(matrix, scale), val);
+    }
+    p.mouseMoved = () => {
+        onMouseMoved(p, notes, scaleMatrix(matrix, scale), val);
+    }
+    p.mouseReleased = () => {
+        onMouseUp(p);
+    }
 };
 
 new p5(sketch);

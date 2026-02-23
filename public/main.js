@@ -94,10 +94,18 @@
   }
 
   // src/matrix.ts
-  function applyMatrix(matrix, vector) {
+  function scaleMatrix(matrix2, scale2) {
     return {
-      x: matrix.a * vector.x + matrix.c * vector.y,
-      y: matrix.b * vector.x + matrix.d * vector.y
+      a: matrix2.a * scale2,
+      b: matrix2.b * scale2,
+      c: matrix2.c * scale2,
+      d: matrix2.d * scale2
+    };
+  }
+  function applyMatrix(matrix2, vector) {
+    return {
+      x: matrix2.a * vector.x + matrix2.c * vector.y,
+      y: matrix2.b * vector.x + matrix2.d * vector.y
     };
   }
 
@@ -150,14 +158,65 @@
     return p52.color(r * 255, g * 255, b * 255);
   }
 
+  // src/player.ts
+  function getClickedNote(p52, notes2, matrix2) {
+    const nearest = { note: null, dist: Infinity };
+    console.log(`Mouse: (${p52.mouseX}, ${p52.mouseY})`);
+    for (const note of notes2) {
+      const pos = noteToPos(note, matrix2);
+      const d = p52.dist(p52.mouseX - p52.width / 2, p52.mouseY - p52.height / 2, pos.x, pos.y);
+      if (d < nearest.dist) {
+        nearest.note = note;
+        nearest.dist = d;
+      }
+    }
+    const ans = nearest.dist <= radius ? nearest.note : null;
+    console.log(ans);
+    return ans;
+  }
+  var audioCtx = new AudioContext();
+  var oscillator = null;
+  var playingNote = null;
+  function isPlaying(note) {
+    return playingNote === note;
+  }
+  function playNote(note, val2) {
+    const frequency = getFrequency(note.monzo, val2);
+    oscillator = audioCtx.createOscillator();
+    oscillator.type = "sine";
+    oscillator.frequency.setValueAtTime(frequency, audioCtx.currentTime);
+    oscillator.connect(audioCtx.destination);
+    oscillator.start();
+    playingNote = note;
+  }
+  function stopNote() {
+    if (oscillator) {
+      oscillator.stop();
+      oscillator.disconnect();
+      oscillator = null;
+    }
+    playingNote = null;
+  }
+  function onMouseDown(p52, notes2, matrix2, val2) {
+    const note = getClickedNote(p52, notes2, matrix2);
+    if (note) {
+      playNote(note, val2);
+    }
+  }
+  function onMouseMoved(p52, notes2, matrix2, val2) {
+  }
+  function onMouseUp(p52) {
+    stopNote();
+  }
+
   // src/renderer.ts
   var radius = 30;
-  function noteToPos(note, matrix) {
+  function noteToPos(note, matrix2) {
     const vector = {
       x: note.monzo.m,
       y: note.monzo.n
     };
-    return applyMatrix(matrix, vector);
+    return applyMatrix(matrix2, vector);
   }
   function fmod(a, b) {
     return a - b * Math.floor(a / b);
@@ -165,13 +224,19 @@
   function noteToHue(note) {
     return fmod(note.monzo.n * Math.log(3) / Math.log(2) * 360 + 20, 360);
   }
-  function drawNote(p52, note, matrix, val2) {
+  function drawNote(p52, note, matrix2, val2) {
     p52.push();
     const hue = noteToHue(note);
-    const pos = noteToPos(note, matrix);
-    p52.fill(oklch(p52, 0.4, 0.2, hue));
-    p52.stroke(oklch(p52, 0.8, 0.2, hue));
-    p52.circle(pos.x, pos.y, radius * 2);
+    const pos = noteToPos(note, matrix2);
+    if (isPlaying(note)) {
+      p52.fill(oklch(p52, 0.6, 0.2, hue));
+      p52.stroke(oklch(p52, 0.8, 0.2, hue));
+      p52.circle(pos.x, pos.y, radius * 2.5);
+    } else {
+      p52.fill(oklch(p52, 0.4, 0.2, hue));
+      p52.stroke(oklch(p52, 0.8, 0.2, hue));
+      p52.circle(pos.x, pos.y, radius * 2);
+    }
     p52.textAlign(p52.CENTER, p52.CENTER);
     p52.textSize(30);
     p52.fill(255);
@@ -186,8 +251,10 @@
   }
 
   // src/main.ts
-  var notes = generateNotes(2, 6, 4, 2, 2);
+  var notes = generateNotes(1, 7, 4, 2, 2);
   var val = makeVal_fromP(17, 27, 2, 440);
+  var matrix = { a: 1, b: -2, c: 2, d: -3 };
+  var scale = 100;
   for (const note of notes) {
     const steps = getSteps(val, note.monzo);
     console.log(note, steps);
@@ -202,10 +269,18 @@
     p.draw = () => {
       p.background(30);
       p.translate(p.width / 2, p.height / 2);
-      const scale = 80;
       notes.forEach((note) => {
-        drawNote(p, note, { a: 1 * scale, b: -2 * scale, c: 1 * scale, d: -3 * scale }, val);
+        drawNote(p, note, scaleMatrix(matrix, scale), val);
       });
+    };
+    p.mousePressed = () => {
+      onMouseDown(p, notes, scaleMatrix(matrix, scale), val);
+    };
+    p.mouseMoved = () => {
+      onMouseMoved(p, notes, scaleMatrix(matrix, scale), val);
+    };
+    p.mouseReleased = () => {
+      onMouseUp(p);
     };
   };
   new p5(sketch);
