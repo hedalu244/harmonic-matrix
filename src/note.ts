@@ -44,17 +44,17 @@ function addSharp(Note: Note, n: number): Note {
     }
 }
 
-export function generateNotes(baseNoteName = "A4", minOct = 2, maxOct = 6, baseOct = 4, flatNum = 1, sharpNum = 1): Note[] {
+export function generateNotes(baseNoteName = "A4", minOct = 2, maxOct = 6, flatNum = 1, sharpNum = 1): Note[] {
     const names = ["C", "D", "E", "F", "G", "A", "B"];
 
     const diatonic: Note[] = [
-        { name: "C", oct: baseOct, monzo: { m: 0, n: 0 } }, // 0
-        { name: "D", oct: baseOct, monzo: { m: -3, n: 2 } }, // -36 + 38 = 2
-        { name: "E", oct: baseOct, monzo: { m: -6, n: 4 } }, // -72 + 76 = 4
-        { name: "F", oct: baseOct, monzo: { m: 2, n: -1 } }, // 24 - 19 = 5
-        { name: "G", oct: baseOct, monzo: { m: -1, n: 1 } }, // -12 + 19 = 7
-        { name: "A", oct: baseOct, monzo: { m: -4, n: 3 } }, // -48 + 57 = 9
-        { name: "B", oct: baseOct, monzo: { m: -7, n: 5 } }, // -84 + 95 = 11
+        { name: "C", oct: 0, monzo: { m: 0, n: 0 } }, // 0
+        { name: "D", oct: 0, monzo: { m: -3, n: 2 } }, // -36 + 38 = 2
+        { name: "E", oct: 0 , monzo: { m: -6, n: 4 } }, // -72 + 76 = 4
+        { name: "F", oct: 0, monzo: { m: 2, n: -1 } }, // 24 - 19 = 5
+        { name: "G", oct: 0, monzo: { m: -1, n: 1 } }, // -12 + 19 = 7
+        { name: "A", oct: 0, monzo: { m: -4, n: 3 } }, // -48 + 57 = 9
+        { name: "B", oct: 0, monzo: { m: -7, n: 5 } }, // -84 + 95 = 11
     ];
 
     const chromatic: Note[] = [...diatonic];
@@ -72,7 +72,7 @@ export function generateNotes(baseNoteName = "A4", minOct = 2, maxOct = 6, baseO
     const notes: Note[] = [];
     for (let oct = minOct; oct <= maxOct; oct++) {
         for (const note of chromatic) {
-            const octDiff = oct - baseOct;
+            const octDiff = oct - note.oct;
             notes.push(addOctave(note, octDiff));
         }
     }

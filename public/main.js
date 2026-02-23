@@ -36,22 +36,22 @@
       }
     };
   }
-  function generateNotes(baseNoteName = "A4", minOct = 2, maxOct = 6, baseOct = 4, flatNum = 1, sharpNum = 1) {
+  function generateNotes(baseNoteName = "A4", minOct = 2, maxOct = 6, flatNum = 1, sharpNum = 1) {
     const names = ["C", "D", "E", "F", "G", "A", "B"];
     const diatonic = [
-      { name: "C", oct: baseOct, monzo: { m: 0, n: 0 } },
+      { name: "C", oct: 0, monzo: { m: 0, n: 0 } },
       // 0
-      { name: "D", oct: baseOct, monzo: { m: -3, n: 2 } },
+      { name: "D", oct: 0, monzo: { m: -3, n: 2 } },
       // -36 + 38 = 2
-      { name: "E", oct: baseOct, monzo: { m: -6, n: 4 } },
+      { name: "E", oct: 0, monzo: { m: -6, n: 4 } },
       // -72 + 76 = 4
-      { name: "F", oct: baseOct, monzo: { m: 2, n: -1 } },
+      { name: "F", oct: 0, monzo: { m: 2, n: -1 } },
       // 24 - 19 = 5
-      { name: "G", oct: baseOct, monzo: { m: -1, n: 1 } },
+      { name: "G", oct: 0, monzo: { m: -1, n: 1 } },
       // -12 + 19 = 7
-      { name: "A", oct: baseOct, monzo: { m: -4, n: 3 } },
+      { name: "A", oct: 0, monzo: { m: -4, n: 3 } },
       // -48 + 57 = 9
-      { name: "B", oct: baseOct, monzo: { m: -7, n: 5 } }
+      { name: "B", oct: 0, monzo: { m: -7, n: 5 } }
       // -84 + 95 = 11
     ];
     const chromatic = [...diatonic];
@@ -68,7 +68,7 @@
     const notes2 = [];
     for (let oct = minOct; oct <= maxOct; oct++) {
       for (const note of chromatic) {
-        const octDiff = oct - baseOct;
+        const octDiff = oct - note.oct;
         notes2.push(addOctave(note, octDiff));
       }
     }
@@ -259,32 +259,32 @@
  ${getFrequency(note.monzo, val2).toFixed(1)}Hz`, pos.x, pos.y + 10);
     p52.pop();
   }
-  function drawOctoveGrid(p52, val2, matrix2, color = 200) {
+  function drawOctaveGrid(p52, val2, matrix2, color = 200) {
     p52.push();
     const incline = applyMatrix(matrix2, { x: Math.log(val2.Q), y: -Math.log(val2.P) });
-    const octove = applyMatrix(matrix2, { x: 1, y: 0 });
+    const octave = applyMatrix(matrix2, { x: 1, y: 0 });
     const scale2 = 100;
     const num = 5;
     p52.stroke(color);
     p52.line(
-      -octove.x * scale2,
-      -octove.y * scale2,
-      octove.x * scale2,
-      octove.y * scale2
+      -octave.x * scale2,
+      -octave.y * scale2,
+      octave.x * scale2,
+      octave.y * scale2
     );
     for (let i = -num; i <= num; i++) {
       p52.line(
-        -incline.x * scale2 + octove.x * i,
-        -incline.y * scale2 + octove.y * i,
-        incline.x * scale2 + octove.x * i,
-        incline.y * scale2 + octove.y * i
+        -incline.x * scale2 + octave.x * i,
+        -incline.y * scale2 + octave.y * i,
+        incline.x * scale2 + octave.x * i,
+        incline.y * scale2 + octave.y * i
       );
     }
     p52.pop();
   }
 
   // src/main.ts
-  var notes = generateNotes("A4", 1, 7, 4, 2, 2);
+  var notes = generateNotes("A4", 1, 7, 2, 2);
   var val = makeVal_asIrrational(2, 3, 440);
   var matrix = { a: 1, b: -2, c: 2, d: -3 };
   var scale = 100;
@@ -302,8 +302,8 @@
     p.draw = () => {
       p.background(30);
       p.translate(p.width / 2, p.height / 2);
-      drawOctoveGrid(p, val, scaleMatrix(matrix, scale));
-      drawOctoveGrid(p, makeVal_asIrrational(2, 3, 440), scaleMatrix(matrix, scale), 100);
+      drawOctaveGrid(p, val, scaleMatrix(matrix, scale));
+      drawOctaveGrid(p, makeVal_asIrrational(2, 3, 440), scaleMatrix(matrix, scale), 100);
       notes.forEach((note) => {
         drawNote(p, note, scaleMatrix(matrix, scale), val);
       });

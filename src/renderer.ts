@@ -52,25 +52,25 @@ export function drawNote(p5: p5_, note: Note, matrix: Matrix, val: Val) {
 }
 
 // 同じ周波数の音を線で結ぶ
-export function drawOctoveGrid(p5: p5_, val: Val, matrix: Matrix, color = 200) {
+export function drawOctaveGrid(p5: p5_, val: Val, matrix: Matrix, color = 200) {
     p5.push();
 
     // m 方向に ln Q、n 方向に -ln P を足すと周波数が P^m * Q^n = P^lnQ / Q^lnP = 1 倍になる、はず
 
     const incline = applyMatrix(matrix, {x: Math.log(val.Q), y: -Math.log(val.P)});
-    const octove = applyMatrix(matrix, {x: 1, y: 0});
+    const octave = applyMatrix(matrix, {x: 1, y: 0});
 
     const scale = 100; // グリッド線の長さの調整係数
     const num = 5; // グリッド線の数（正負両方に引くので、実際にはこれの倍）
 
    
     p5.stroke(color);
-    p5.line(-octove.x * scale, -octove.y * scale,
-             octove.x * scale, octove.y * scale);
+    p5.line(-octave.x * scale, -octave.y * scale,
+             octave.x * scale, octave.y * scale);
     
     for (let i = -num; i <= num; i++) {
-        p5.line(-incline.x * scale + octove.x * i, -incline.y * scale + octove.y * i,
-                 incline.x * scale + octove.x * i,  incline.y * scale + octove.y * i);
+        p5.line(-incline.x * scale + octave.x * i, -incline.y * scale + octave.y * i,
+                 incline.x * scale + octave.x * i,  incline.y * scale + octave.y * i);
     }
     p5.pop();
 }
