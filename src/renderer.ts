@@ -1,5 +1,5 @@
 import type p5_ from "p5";
-import { getFrequency, Monzo, Val } from "./monzo";
+import { getFrequency, getSteps, Monzo, Val } from "./monzo";
 import { Vector, Matrix, applyMatrix } from "./matrix";
 import { Note } from "./note";
 import { oklch } from "./oklch";
@@ -20,13 +20,13 @@ function fmod(a: number, b: number): number {
     return a - b * Math.floor(a / b);
 }
 
-function noteToHue(note: Note): number {
-    return fmod((note.monzo.n * Math.log(3) / Math.log(2)) * 360 + 20, 360);
+function noteToHue(note: Note, val: Val): number {
+    return fmod((note.monzo.n * Math.log(val.Q) / Math.log(val.P)) * 360 + 20, 360);
 }
 
 export function drawNote(p5: p5_, note: Note, matrix: Matrix, val: Val) {
     p5.push();
-    const hue = noteToHue(note);
+    const hue = noteToHue(note, val);
     const pos = noteToPos(note, matrix);
 
     if (isPlaying(note)) {
@@ -47,7 +47,12 @@ export function drawNote(p5: p5_, note: Note, matrix: Matrix, val: Val) {
     p5.textSize(25);
     p5.text(`${note.name}${note.oct}`, pos.x, pos.y - 15);
     p5.textSize(15);
-    p5.text(`\n［${note.monzo.m} ${note.monzo.n}〉 \n ${getFrequency(note.monzo, val).toFixed(1)}Hz`, pos.x, pos.y + 10);
+    if (val.p !== null && val.q !== null) {
+        p5.text(`\n［${note.monzo.m} ${note.monzo.n}〉= ${getSteps(val, note.monzo)} \n ${getFrequency(note.monzo, val).toFixed(1)}Hz`, pos.x, pos.y + 10);
+    }
+    else {
+        p5.text(`\n［${note.monzo.m} ${note.monzo.n}〉 \n ${getFrequency(note.monzo, val).toFixed(1)}Hz`, pos.x, pos.y + 10);
+    }
     p5.pop();
 }
 

@@ -1,4 +1,4 @@
-import { getFrequency, Monzo, Val } from "./monzo";
+import { Monzo, Val } from "./monzo";
 
 export interface Note {
     name: string,

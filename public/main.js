@@ -99,6 +99,11 @@
     if (val2.p === null || val2.q === null) return null;
     return monzo.m * val2.p + monzo.n * val2.q;
   }
+  function makeVal_fromP(p, q, P, baseFreq) {
+    const S = Math.pow(P, 1 / p);
+    const Q = Math.pow(S, q);
+    return { P, Q, S, p, q, baseFreq };
+  }
   function makeVal_asIrrational(P, Q, baseFreq) {
     return { P, Q, S: null, p: null, q: null, baseFreq };
   }
@@ -231,12 +236,12 @@
   function fmod(a, b) {
     return a - b * Math.floor(a / b);
   }
-  function noteToHue(note) {
-    return fmod(note.monzo.n * Math.log(3) / Math.log(2) * 360 + 20, 360);
+  function noteToHue(note, val2) {
+    return fmod(note.monzo.n * Math.log(val2.Q) / Math.log(val2.P) * 360 + 20, 360);
   }
   function drawNote(p52, note, matrix2, val2) {
     p52.push();
-    const hue = noteToHue(note);
+    const hue = noteToHue(note, val2);
     const pos = noteToPos(note, matrix2);
     if (isPlaying(note)) {
       p52.fill(oklch(p52, 0.6, 0.2, hue));
@@ -254,9 +259,15 @@
     p52.textSize(25);
     p52.text(`${note.name}${note.oct}`, pos.x, pos.y - 15);
     p52.textSize(15);
-    p52.text(`
+    if (val2.p !== null && val2.q !== null) {
+      p52.text(`
+\uFF3B${note.monzo.m} ${note.monzo.n}\u3009= ${getSteps(val2, note.monzo)} 
+ ${getFrequency(note.monzo, val2).toFixed(1)}Hz`, pos.x, pos.y + 10);
+    } else {
+      p52.text(`
 \uFF3B${note.monzo.m} ${note.monzo.n}\u3009 
  ${getFrequency(note.monzo, val2).toFixed(1)}Hz`, pos.x, pos.y + 10);
+    }
     p52.pop();
   }
   function drawOctaveGrid(p52, val2, matrix2, color = 200) {
