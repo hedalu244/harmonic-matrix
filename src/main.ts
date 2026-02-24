@@ -10,11 +10,6 @@ import { Matrix, scaleMatrix } from "./matrix";
 import { onMouseDown, onMouseMoved, onMouseUp } from "./player";
 import { settings } from "./gui";
 
-let val: Val;
-let notes: Note[];
-let matrix: Matrix;
-let scale: number;
-
 const sketch = (p: p5_) => {
     p.setup = () => {
         p.createCanvas(p.windowWidth, p.windowHeight);
@@ -23,27 +18,21 @@ const sketch = (p: p5_) => {
         p.resizeCanvas(p.windowWidth, p.windowHeight);
     }
     p.draw = () => {
-        val = settings.val;
-        notes = settings.notes;
-        matrix = settings.matrix;
-        scale = settings.scale;
-
-
         p.background(30);
         p.translate(p.width / 2, p.height / 2);
-        drawOctaveGrid(p, val, scaleMatrix(matrix, scale));
-        drawOctaveGrid(p, makeVal_justIntonation(2, 3, 440), scaleMatrix(matrix, scale), 100);
+        drawOctaveGrid(p, settings.val, settings.scaledMatrix);
+        drawOctaveGrid(p, makeVal_justIntonation(2, 3, 440), settings.scaledMatrix, 100);
 
-        notes.forEach(note => {
-            drawNote(p, note, scaleMatrix(matrix, scale));
+        settings.notes.forEach(note => {
+            drawNote(p, note, settings.scaledMatrix, settings.size);
         });
     };
 
     p.mousePressed = () => {
-        onMouseDown(p, notes, scaleMatrix(matrix, scale));
+        onMouseDown(p, settings.notes, settings.scaledMatrix);
     }
     p.mouseMoved = () => {
-        onMouseMoved(p, notes, scaleMatrix(matrix, scale));
+        onMouseMoved(p, settings.notes, settings.scaledMatrix);
     }
     p.mouseReleased = () => {
         onMouseUp(p);

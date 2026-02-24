@@ -99,7 +99,7 @@
         -->
     
         <h3>表示範囲</h3>
-        <div style="display: grid; grid-template-columns: auto auto;">
+        <div style="display: grid; gap:5px 20px; grid-template-columns: auto auto;">
             <span style="text-align: center; grid-area: 1 / 1 / 2 / 3;">
                 <input type="text" id="minNote" value="A1" style="width:2em;">　～　
                 <input type="text" id="maxNote" value="A7" style="width:2em;">
@@ -107,16 +107,17 @@
             <span style="text-align: right;">
                 <input type="text" inputmode="numeric" id="flatNum" value="3" style="width:2em;">
             </span>
-            <span>　フラット</span>
+            <span>フラット</span>
             <span style="text-align: right;">
                 <input type="text" inputmode="numeric" id="sharpNum" value="3" style="width:2em;">
             </span>
-            <span>　シャープ</span>
+            <span>シャープ</span>
         </div>
 
         <h3>表示スケール</h3>
-        <div style="text-align: center;">
-        <input type="range" id="scale" min="0" max="200" value="100" style="width:200px;">
+        <div style="display: grid; gap:5px 20px; grid-template-columns: auto auto;">
+        <span style="text-align: right;">スケール</span><input type="range" id="scale" min="0" max="200" value="100" style="width:200px;">
+        <span style="text-align: right;">間隔</span><input type="range" id="gap" min="0" max="200" value="100" style="width:200px;">
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/p5/lib/p5.min.js"></script>

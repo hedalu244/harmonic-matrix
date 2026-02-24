@@ -2,7 +2,7 @@ import type p5_ from "p5";
 import { getFrequency, Monzo, Val } from "./monzo";
 import { Vector, Matrix, applyMatrix } from "./matrix";
 import { Note } from "./note";
-import { noteToPos, radius } from "./renderer";
+import { noteToPos } from "./renderer";
 
 export function getClickedNote(p5: p5_, notes: Note[], matrix: Matrix): Note | null {
     const nearest = { note: null as Note | null, dist: Infinity };
@@ -15,7 +15,8 @@ export function getClickedNote(p5: p5_, notes: Note[], matrix: Matrix): Note | n
             nearest.dist = d;
         }
     }
-    const ans = nearest.dist <= radius ? nearest.note : null;
+    // const ans = nearest.dist <= size * 0.7 ? nearest.note : null;
+     const ans = nearest.note;
     console.log(ans);
     return ans;
 }

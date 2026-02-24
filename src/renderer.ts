@@ -5,8 +5,6 @@ import { Note } from "./note";
 import { oklch } from "./oklch";
 import { isPlaying } from "./player";
 
-export const radius = 30; //px
-
 export function noteToPos(note: Note, matrix: Matrix): Vector {
     const vector: Vector = {
         x: note.monzo.m,
@@ -24,7 +22,7 @@ function noteToHue(note: Note): number {
     return fmod((note.monzo.n * Math.log(note.val.Q) / Math.log(note.val.P)) * 360 + 20, 360);
 }
 
-export function drawNote(p5: p5_, note: Note, matrix: Matrix) {
+export function drawNote(p5: p5_, note: Note, matrix: Matrix, size: number) {
     p5.push();
     const hue = noteToHue(note);
     const pos = noteToPos(note, matrix);
@@ -32,27 +30,27 @@ export function drawNote(p5: p5_, note: Note, matrix: Matrix) {
     if (isPlaying(note)) {
         p5.fill(oklch(p5, 0.6, 0.2, hue));
         p5.stroke(oklch(p5, 0.8, 0.2, hue));
-        p5.circle(pos.x, pos.y, radius * 2.5);
+        p5.circle(pos.x, pos.y, size * 0.7);
     }
     else {
         p5.fill(oklch(p5, 0.4, 0.2, hue));
         p5.stroke(oklch(p5, 0.8, 0.2, hue));
-        p5.circle(pos.x, pos.y, radius * 2);
+        p5.circle(pos.x, pos.y, size * 0.6);
     }
 
     p5.textAlign(p5.CENTER, p5.CENTER);
     p5.fill(255);
     p5.noStroke()
 
-    p5.textSize(25);
-    p5.text(`${note.name}${note.oct}`, pos.x, pos.y - 15);
+    p5.textSize(size * 0.25);
+    p5.text(`${note.name}${note.oct}`, pos.x, pos.y - size * 0.15);
     
-    p5.textSize(15);
+    p5.textSize(size * 0.15);
     if (note.steps !== null) {
-        p5.text(`［${note.monzo.m} ${note.monzo.n}〉= ${note.steps} \n ${note.frequency.toFixed(1)}Hz`, pos.x, pos.y + 20);
+        p5.text(`［${note.monzo.m} ${note.monzo.n}〉= ${note.steps} \n ${note.frequency.toFixed(1)}Hz`, pos.x, pos.y + size * 0.2);
     }
     else {
-        p5.text(`［${note.monzo.m} ${note.monzo.n}〉 \n ${note.frequency.toFixed(1)}Hz`, pos.x, pos.y + 20);
+        p5.text(`［${note.monzo.m} ${note.monzo.n}〉 \n ${note.frequency.toFixed(1)}Hz`, pos.x, pos.y + size * 0.2);
     }
     p5.pop();
 }

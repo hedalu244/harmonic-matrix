@@ -1,4 +1,4 @@
-import { Matrix } from "./matrix";
+import { Matrix, scaleMatrix } from "./matrix";
 import { makeVal_justIntonation, makeVal_fromP, makeVal_fromQ, Val, makeVal_fromS } from "./monzo";
 import { generateNotes, Note } from "./note";
 
@@ -6,14 +6,16 @@ interface GUISettings {
     val: Val,
     notes: Note[],
     matrix: Matrix,
-    scale: number,
+    scaledMatrix: Matrix,
+    size: number
 }
 
 export const settings: GUISettings = {
     val: makeVal_fromP(12, 19, 2, 440),
     notes: [],
     matrix: { a: 1, b: -2, c: 2, d: -3 },
-    scale: 100,
+    scaledMatrix: scaleMatrix({ a: 1, b: -2, c: 2, d: -3 }, 100),
+    size: 100,
 };
 
 function initializeGUI() {
@@ -193,13 +195,18 @@ function updateNotes() {
 }
 
 function updateScale() {
+    const gapInput = getInputElement("gap");
     const scaleInput = getInputElement("scale");
+
+    const gap = parseFloat(gapInput.value);
     const scale = parseFloat(scaleInput.value);
-    if (isNaN(scale)) {
-        console.warn("Invalid input for scale: ", scale);
+
+    if (isNaN(gap) || isNaN(scale)) {
+        console.warn("Invalid input for gap or scale: ", { gap, scale });
         return;
     }
-    settings.scale = scale;
+    settings.scaledMatrix = scaleMatrix(settings.matrix, gap * scale / 100);
+    settings.size = scale;
 }
 
 Array.from(document.getElementsByName("tuning")).forEach(input => {
@@ -220,6 +227,7 @@ getInputElement("flatNum").addEventListener("input", updateNotes);
 getInputElement("sharpNum").addEventListener("input", updateNotes);
 
 getInputElement("scale").addEventListener("input", updateScale);
+getInputElement("gap").addEventListener("input", updateScale);
 
 Array.from(document.getElementsByTagName("input")).forEach(input => {
     if (input.inputMode === "numeric") {

@@ -1,11 +1,27 @@
 (() => {
-  // src/monzo.ts
-  function getFrequency(val2, monzo) {
-    return val2.baseFreq * Math.pow(val2.P, monzo.m) * Math.pow(val2.Q, monzo.n);
+  // src/matrix.ts
+  function scaleMatrix(matrix, scale) {
+    return {
+      a: matrix.a * scale,
+      b: matrix.b * scale,
+      c: matrix.c * scale,
+      d: matrix.d * scale
+    };
   }
-  function getSteps(val2, monzo) {
-    if (val2.p === null || val2.q === null) return null;
-    return monzo.m * val2.p + monzo.n * val2.q;
+  function applyMatrix(matrix, vector) {
+    return {
+      x: matrix.a * vector.x + matrix.c * vector.y,
+      y: matrix.b * vector.x + matrix.d * vector.y
+    };
+  }
+
+  // src/monzo.ts
+  function getFrequency(val, monzo) {
+    return val.baseFreq * Math.pow(val.P, monzo.m) * Math.pow(val.Q, monzo.n);
+  }
+  function getSteps(val, monzo) {
+    if (val.p === null || val.q === null) return null;
+    return monzo.m * val.p + monzo.n * val.q;
   }
   function makeVal_fromP(p, q, P, baseFreq) {
     const S = Math.pow(P, 1 / p);
@@ -66,7 +82,7 @@
       monzo
     };
   }
-  function generateNotes(val2, baseNoteName = "A4", minNoteName = "A0", maxNoteName = "C8", flatNum = 1, sharpNum = 1) {
+  function generateNotes(val, baseNoteName = "A4", minNoteName = "A0", maxNoteName = "C8", flatNum = 1, sharpNum = 1) {
     const baseMatch = baseNoteName.toUpperCase().match(/([A-G][♭#]*)(\d+)/);
     const minMatch = minNoteName.toUpperCase().match(/([A-G][♭#]*)(\d+)/);
     const maxMatch = maxNoteName.toUpperCase().match(/([A-G][♭#]*)(\d+)/);
@@ -119,11 +135,11 @@
       throw new Error(`Min note ${minNoteName} not found`);
     if (!maxNote)
       throw new Error(`Max note ${maxNoteName} not found`);
-    const minFrequency = getFrequency(val2, {
+    const minFrequency = getFrequency(val, {
       m: minNote.monzo.m - baseNote.monzo.m,
       n: minNote.monzo.n - baseNote.monzo.n
     });
-    const maxFrequency = getFrequency(val2, {
+    const maxFrequency = getFrequency(val, {
       m: maxNote.monzo.m - baseNote.monzo.m,
       n: maxNote.monzo.n - baseNote.monzo.n
     });
@@ -136,9 +152,9 @@
         name: note.name,
         oct: note.oct,
         monzo,
-        val: val2,
-        frequency: getFrequency(val2, monzo),
-        steps: getSteps(val2, monzo)
+        val,
+        frequency: getFrequency(val, monzo),
+        steps: getSteps(val, monzo)
       };
     }).sort((a, b) => a.frequency - b.frequency).filter((note) => note.frequency >= minFrequency && note.frequency <= maxFrequency);
   }
@@ -148,7 +164,8 @@
     val: makeVal_fromP(12, 19, 2, 440),
     notes: [],
     matrix: { a: 1, b: -2, c: 2, d: -3 },
-    scale: 100
+    scaledMatrix: scaleMatrix({ a: 1, b: -2, c: 2, d: -3 }, 100),
+    size: 100
   };
   function initializeGUI() {
     changeTuningMethod();
@@ -238,14 +255,14 @@
         console.warn("Invalid input: ", { baseFreq, PVal, QVal });
         return;
       }
-      const val2 = makeVal_justIntonation(PVal, QVal, baseFreq);
+      const val = makeVal_justIntonation(PVal, QVal, baseFreq);
       Selm.value = "";
       Selm.readOnly = true;
       pelm.value = "";
       pelm.readOnly = true;
       qelm.value = "";
       qelm.readOnly = true;
-      settings.val = val2;
+      settings.val = val;
       updateNotes();
       return;
     }
@@ -254,12 +271,12 @@
         console.warn("Invalid input: ", { baseFreq, pVal, qVal, PVal });
         return;
       }
-      const val2 = makeVal_fromP(pVal, qVal, PVal, baseFreq);
-      Qelm.value = val2.Q.toString();
+      const val = makeVal_fromP(pVal, qVal, PVal, baseFreq);
+      Qelm.value = val.Q.toString();
       Qelm.readOnly = true;
-      Selm.value = val2.S.toString();
+      Selm.value = val.S.toString();
       Selm.readOnly = true;
-      settings.val = val2;
+      settings.val = val;
       updateNotes();
       return;
     }
@@ -268,12 +285,12 @@
         console.warn("Invalid input: ", { baseFreq, pVal, qVal, QVal });
         return;
       }
-      const val2 = makeVal_fromQ(pVal, qVal, QVal, baseFreq);
-      Pelm.value = val2.P.toString();
+      const val = makeVal_fromQ(pVal, qVal, QVal, baseFreq);
+      Pelm.value = val.P.toString();
       Pelm.readOnly = true;
-      Selm.value = val2.S.toString();
+      Selm.value = val.S.toString();
       Selm.readOnly = true;
-      settings.val = val2;
+      settings.val = val;
       updateNotes();
       return;
     }
@@ -282,12 +299,12 @@
         console.warn("Invalid input: ", { baseFreq, pVal, qVal, SVal });
         return;
       }
-      const val2 = makeVal_fromS(pVal, qVal, SVal, baseFreq);
-      Pelm.value = val2.P.toString();
+      const val = makeVal_fromS(pVal, qVal, SVal, baseFreq);
+      Pelm.value = val.P.toString();
       Pelm.readOnly = true;
-      Qelm.value = val2.Q.toString();
+      Qelm.value = val.Q.toString();
       Qelm.readOnly = true;
-      settings.val = val2;
+      settings.val = val;
       updateNotes();
       return;
     }
@@ -310,13 +327,16 @@
     }
   }
   function updateScale() {
+    const gapInput = getInputElement("gap");
     const scaleInput = getInputElement("scale");
-    const scale2 = parseFloat(scaleInput.value);
-    if (isNaN(scale2)) {
-      console.warn("Invalid input for scale: ", scale2);
+    const gap = parseFloat(gapInput.value);
+    const scale = parseFloat(scaleInput.value);
+    if (isNaN(gap) || isNaN(scale)) {
+      console.warn("Invalid input for gap or scale: ", { gap, scale });
       return;
     }
-    settings.scale = scale2;
+    settings.scaledMatrix = scaleMatrix(settings.matrix, gap * scale / 100);
+    settings.size = scale;
   }
   Array.from(document.getElementsByName("tuning")).forEach((input) => {
     input.addEventListener("change", changeTuningMethod);
@@ -333,6 +353,7 @@
   getInputElement("flatNum").addEventListener("input", updateNotes);
   getInputElement("sharpNum").addEventListener("input", updateNotes);
   getInputElement("scale").addEventListener("input", updateScale);
+  getInputElement("gap").addEventListener("input", updateScale);
   Array.from(document.getElementsByTagName("input")).forEach((input) => {
     if (input.inputMode === "numeric") {
       input.addEventListener("input", () => {
@@ -340,22 +361,6 @@
       });
     }
   });
-
-  // src/matrix.ts
-  function scaleMatrix(matrix2, scale2) {
-    return {
-      a: matrix2.a * scale2,
-      b: matrix2.b * scale2,
-      c: matrix2.c * scale2,
-      d: matrix2.d * scale2
-    };
-  }
-  function applyMatrix(matrix2, vector) {
-    return {
-      x: matrix2.a * vector.x + matrix2.c * vector.y,
-      y: matrix2.b * vector.x + matrix2.d * vector.y
-    };
-  }
 
   // src/oklch.ts
   function dot(a, b) {
@@ -407,18 +412,18 @@
   }
 
   // src/player.ts
-  function getClickedNote(p52, notes2, matrix2) {
+  function getClickedNote(p52, notes, matrix) {
     const nearest = { note: null, dist: Infinity };
     console.log(`Mouse: (${p52.mouseX}, ${p52.mouseY})`);
-    for (const note of notes2) {
-      const pos = noteToPos(note, matrix2);
+    for (const note of notes) {
+      const pos = noteToPos(note, matrix);
       const d = p52.dist(p52.mouseX - p52.width / 2, p52.mouseY - p52.height / 2, pos.x, pos.y);
       if (d < nearest.dist) {
         nearest.note = note;
         nearest.dist = d;
       }
     }
-    const ans = nearest.dist <= radius ? nearest.note : null;
+    const ans = nearest.note;
     console.log(ans);
     return ans;
   }
@@ -445,26 +450,25 @@
     }
     playingNote = null;
   }
-  function onMouseDown(p52, notes2, matrix2) {
-    const note = getClickedNote(p52, notes2, matrix2);
+  function onMouseDown(p52, notes, matrix) {
+    const note = getClickedNote(p52, notes, matrix);
     if (note) {
       playNote(note);
     }
   }
-  function onMouseMoved(p52, notes2, matrix2) {
+  function onMouseMoved(p52, notes, matrix) {
   }
   function onMouseUp(p52) {
     stopNote();
   }
 
   // src/renderer.ts
-  var radius = 30;
-  function noteToPos(note, matrix2) {
+  function noteToPos(note, matrix) {
     const vector = {
       x: note.monzo.m,
       y: note.monzo.n
     };
-    return applyMatrix(matrix2, vector);
+    return applyMatrix(matrix, vector);
   }
   function fmod(a, b) {
     return a - b * Math.floor(a / b);
@@ -472,63 +476,59 @@
   function noteToHue(note) {
     return fmod(note.monzo.n * Math.log(note.val.Q) / Math.log(note.val.P) * 360 + 20, 360);
   }
-  function drawNote(p52, note, matrix2) {
+  function drawNote(p52, note, matrix, size) {
     p52.push();
     const hue = noteToHue(note);
-    const pos = noteToPos(note, matrix2);
+    const pos = noteToPos(note, matrix);
     if (isPlaying(note)) {
       p52.fill(oklch(p52, 0.6, 0.2, hue));
       p52.stroke(oklch(p52, 0.8, 0.2, hue));
-      p52.circle(pos.x, pos.y, radius * 2.5);
+      p52.circle(pos.x, pos.y, size * 0.7);
     } else {
       p52.fill(oklch(p52, 0.4, 0.2, hue));
       p52.stroke(oklch(p52, 0.8, 0.2, hue));
-      p52.circle(pos.x, pos.y, radius * 2);
+      p52.circle(pos.x, pos.y, size * 0.6);
     }
     p52.textAlign(p52.CENTER, p52.CENTER);
     p52.fill(255);
     p52.noStroke();
-    p52.textSize(25);
-    p52.text(`${note.name}${note.oct}`, pos.x, pos.y - 15);
-    p52.textSize(15);
+    p52.textSize(size * 0.25);
+    p52.text(`${note.name}${note.oct}`, pos.x, pos.y - size * 0.15);
+    p52.textSize(size * 0.15);
     if (note.steps !== null) {
       p52.text(`\uFF3B${note.monzo.m} ${note.monzo.n}\u3009= ${note.steps} 
- ${note.frequency.toFixed(1)}Hz`, pos.x, pos.y + 20);
+ ${note.frequency.toFixed(1)}Hz`, pos.x, pos.y + size * 0.2);
     } else {
       p52.text(`\uFF3B${note.monzo.m} ${note.monzo.n}\u3009 
- ${note.frequency.toFixed(1)}Hz`, pos.x, pos.y + 20);
+ ${note.frequency.toFixed(1)}Hz`, pos.x, pos.y + size * 0.2);
     }
     p52.pop();
   }
-  function drawOctaveGrid(p52, val2, matrix2, color = 200) {
+  function drawOctaveGrid(p52, val, matrix, color = 200) {
     p52.push();
-    const incline = applyMatrix(matrix2, { x: Math.log(val2.Q), y: -Math.log(val2.P) });
-    const octave = applyMatrix(matrix2, { x: 1, y: 0 });
-    const scale2 = 100;
+    const incline = applyMatrix(matrix, { x: Math.log(val.Q), y: -Math.log(val.P) });
+    const octave = applyMatrix(matrix, { x: 1, y: 0 });
+    const scale = 100;
     const num = 5;
     p52.stroke(color);
     p52.line(
-      -octave.x * scale2,
-      -octave.y * scale2,
-      octave.x * scale2,
-      octave.y * scale2
+      -octave.x * scale,
+      -octave.y * scale,
+      octave.x * scale,
+      octave.y * scale
     );
     for (let i = -num; i <= num; i++) {
       p52.line(
-        -incline.x * scale2 + octave.x * i,
-        -incline.y * scale2 + octave.y * i,
-        incline.x * scale2 + octave.x * i,
-        incline.y * scale2 + octave.y * i
+        -incline.x * scale + octave.x * i,
+        -incline.y * scale + octave.y * i,
+        incline.x * scale + octave.x * i,
+        incline.y * scale + octave.y * i
       );
     }
     p52.pop();
   }
 
   // src/main.ts
-  var val;
-  var notes;
-  var matrix;
-  var scale;
   var sketch = (p) => {
     p.setup = () => {
       p.createCanvas(p.windowWidth, p.windowHeight);
@@ -537,23 +537,19 @@
       p.resizeCanvas(p.windowWidth, p.windowHeight);
     };
     p.draw = () => {
-      val = settings.val;
-      notes = settings.notes;
-      matrix = settings.matrix;
-      scale = settings.scale;
       p.background(30);
       p.translate(p.width / 2, p.height / 2);
-      drawOctaveGrid(p, val, scaleMatrix(matrix, scale));
-      drawOctaveGrid(p, makeVal_justIntonation(2, 3, 440), scaleMatrix(matrix, scale), 100);
-      notes.forEach((note) => {
-        drawNote(p, note, scaleMatrix(matrix, scale));
+      drawOctaveGrid(p, settings.val, settings.scaledMatrix);
+      drawOctaveGrid(p, makeVal_justIntonation(2, 3, 440), settings.scaledMatrix, 100);
+      settings.notes.forEach((note) => {
+        drawNote(p, note, settings.scaledMatrix, settings.size);
       });
     };
     p.mousePressed = () => {
-      onMouseDown(p, notes, scaleMatrix(matrix, scale));
+      onMouseDown(p, settings.notes, settings.scaledMatrix);
     };
     p.mouseMoved = () => {
-      onMouseMoved(p, notes, scaleMatrix(matrix, scale));
+      onMouseMoved(p, settings.notes, settings.scaledMatrix);
     };
     p.mouseReleased = () => {
       onMouseUp(p);
