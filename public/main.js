@@ -543,8 +543,10 @@
     const toggleMode = getInputElement("playModeToggle");
     if (holdMode.checked) {
       settings.playMode = "hold";
+      stopAllNotes();
     } else if (toggleMode.checked) {
       settings.playMode = "toggle";
+      stopAllNotes();
     }
   }
   function updateScale() {

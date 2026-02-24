@@ -207,10 +207,11 @@ function updatePlayMode() {
     const toggleMode = getInputElement("playModeToggle");
     if (holdMode.checked) {
         settings.playMode = "hold";
-        
+        player.stopAllNotes();
     }
     else if (toggleMode.checked) {
         settings.playMode = "toggle";
+        player.stopAllNotes();
     }
 }
 
