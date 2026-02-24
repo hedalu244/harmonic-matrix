@@ -22,7 +22,7 @@ function noteToHue(note: Note): number {
     function fmod(a: number, b: number): number {
         return a - b * Math.floor(a / b);
     }
-    return fmod((note.monzo.n * Math.log(note.val.Q) / Math.log(note.val.P)) * 360 + 20, 360);
+    return fmod(Math.log(note.frequency) / Math.log(note.val.P) * 360 + 100, 360);
 }
 
 function drawNote(p5: p5_, note: Note) {
