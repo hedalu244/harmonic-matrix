@@ -659,7 +659,7 @@
     console.log(ans);
     return ans;
   }
-  function onMouseDown(p52, notes, matrix) {
+  function mouseLeftPressed(p52, notes, matrix) {
     const note = getClickedNote(p52, notes, matrix);
     if (settings.playMode === "toggle") {
       if (note) {
@@ -675,9 +675,7 @@
       }
     }
   }
-  function onMouseMoved(p52, notes, matrix) {
-  }
-  function onMouseUp(p52) {
+  function mouseLeftReleased(p52) {
     if (settings.playMode === "hold") {
       stopAllNotes();
     }
@@ -699,14 +697,18 @@
       drawOctaveGrid(p, makeVal_justIntonation(2, 3, 440), settings.scaledMatrix, 100);
       drawNotes(p);
     };
-    canvas.addEventListener("mousedown", () => {
-      onMouseDown(p, settings.notes, settings.scaledMatrix);
+    canvas.addEventListener("contextmenu", (event) => {
+      event.preventDefault();
     });
-    canvas.addEventListener("mousemove", () => {
-      onMouseMoved(p, settings.notes, settings.scaledMatrix);
+    canvas.addEventListener("mousedown", (event) => {
+      event.preventDefault();
+      if (event.button === 0)
+        mouseLeftPressed(p, settings.notes, settings.scaledMatrix);
     });
-    canvas.addEventListener("mouseup", () => {
-      onMouseUp(p);
+    canvas.addEventListener("mouseup", (event) => {
+      event.preventDefault();
+      if (event.button === 0)
+        mouseLeftReleased(p);
     });
   };
   new p5(sketch);

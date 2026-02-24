@@ -6,7 +6,7 @@ import { noteToPos } from "./renderer";
 import * as Player from "./player";
 import { settings } from "./gui";
 
-export function getClickedNote(p5: p5_, notes: Note[], matrix: Matrix): Note | null {
+function getClickedNote(p5: p5_, notes: Note[], matrix: Matrix): Note | null {
     const nearest = { note: null as Note | null, dist: Infinity };
     console.log(`Mouse: (${p5.mouseX}, ${p5.mouseY})`);
     for (const note of notes) {
@@ -23,7 +23,7 @@ export function getClickedNote(p5: p5_, notes: Note[], matrix: Matrix): Note | n
     return ans;
 }
 
-export function onMouseDown(p5: p5_, notes: Note[], matrix: Matrix) {
+export function mouseLeftPressed(p5: p5_, notes: Note[], matrix: Matrix) {
     const note = getClickedNote(p5, notes, matrix);
 
     if (settings.playMode === "toggle") {
@@ -39,18 +39,7 @@ export function onMouseDown(p5: p5_, notes: Note[], matrix: Matrix) {
         Player.playNote(note);
     }
 }
-
-export function onMouseMoved(p5: p5_, notes: Note[], matrix: Matrix) {
-    /*
-    const note = getClickedNote(p5, notes, matrix);
-    if (note !== playingNote) {
-        stopNote();
-        if (note) {
-            playNote(note);
-        }
-    }*/
-}
-export function onMouseUp(p5: p5_) {
+export function mouseLeftReleased(p5: p5_) {
     if (settings.playMode === "hold") {
         Player.stopAllNotes();
     }

@@ -3,7 +3,7 @@ declare const p5: typeof p5_; // 外部で値としてのp5が実装されてい
 
 import { makeVal_justIntonation, makeVal_fromP, Val } from "./monzo";
 import { drawOctaveGrid, drawNotes } from "./renderer";
-import { onMouseDown, onMouseMoved, onMouseUp } from "./mouseEvent";
+import * as mouseEvent from "./mouseEvent";
 import { settings } from "./gui";
 
 const canvas = document.getElementById("canvas") as HTMLCanvasElement;
@@ -22,14 +22,18 @@ const sketch = (p: p5_) => {
 
         drawNotes(p);
     };
-    canvas.addEventListener("mousedown", () => {
-        onMouseDown(p, settings.notes, settings.scaledMatrix);
+    canvas.addEventListener("contextmenu", (event) => {
+        event.preventDefault();
     });
-    canvas.addEventListener("mousemove", () => {
-        onMouseMoved(p, settings.notes, settings.scaledMatrix);
+    canvas.addEventListener("mousedown", (event) => {
+        event.preventDefault();
+        if (event.button === 0) // 左クリック
+            mouseEvent.mouseLeftPressed(p, settings.notes, settings.scaledMatrix);
     });
-    canvas.addEventListener("mouseup", () => {
-        onMouseUp(p);
+    canvas.addEventListener("mouseup", (event) => {
+        event.preventDefault();
+        if (event.button === 0) // 左クリック
+            mouseEvent.mouseLeftReleased(p);
     });
 };
 new p5(sketch);
