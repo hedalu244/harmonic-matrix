@@ -38,6 +38,8 @@ compressor.connect(audioCtx.destination);
 
 type Voice = { oscillator: OscillatorNode; gain: GainNode };
 let oscillators = new Map<number, Voice>();
+const releaseTimeSec = 0.01;
+const minGain = 0.0001;
 
 export function isPlaying(note: Note): boolean {
     return oscillators.has(note.frequency);
@@ -67,9 +69,15 @@ function playNote(note: Note) {
 function stopNote(note: Note) {
     const voice = oscillators.get(note.frequency);
     if (voice) {
-        voice.oscillator.stop();
-        voice.oscillator.disconnect();
-        voice.gain.disconnect();
+        const now = audioCtx.currentTime;
+        voice.gain.gain.cancelScheduledValues(now);
+        voice.gain.gain.setValueAtTime(Math.max(voice.gain.gain.value, minGain), now);
+        voice.gain.gain.exponentialRampToValueAtTime(minGain, now + releaseTimeSec);
+        voice.oscillator.stop(now + releaseTimeSec);
+        voice.oscillator.onended = () => {
+            voice.oscillator.disconnect();
+            voice.gain.disconnect();
+        };
     }
     oscillators.delete(note.frequency);
     updateMasterGain();
@@ -77,9 +85,15 @@ function stopNote(note: Note) {
 
 export function stopAllNotes() {
     for (const voice of oscillators.values()) {
-        voice.oscillator.stop();
-        voice.oscillator.disconnect();
-        voice.gain.disconnect();
+        const now = audioCtx.currentTime;
+        voice.gain.gain.cancelScheduledValues(now);
+        voice.gain.gain.setValueAtTime(Math.max(voice.gain.gain.value, minGain), now);
+        voice.gain.gain.exponentialRampToValueAtTime(minGain, now + releaseTimeSec);
+        voice.oscillator.stop(now + releaseTimeSec);
+        voice.oscillator.onended = () => {
+            voice.oscillator.disconnect();
+            voice.gain.disconnect();
+        };
     }
     oscillators.clear();
     updateMasterGain();

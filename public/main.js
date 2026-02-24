@@ -302,6 +302,8 @@
   masterGain.connect(compressor);
   compressor.connect(audioCtx.destination);
   var oscillators = /* @__PURE__ */ new Map();
+  var releaseTimeSec = 0.01;
+  var minGain = 1e-4;
   function isPlaying(note) {
     return oscillators.has(note.frequency);
   }
@@ -326,18 +328,30 @@
   function stopNote(note) {
     const voice = oscillators.get(note.frequency);
     if (voice) {
-      voice.oscillator.stop();
-      voice.oscillator.disconnect();
-      voice.gain.disconnect();
+      const now = audioCtx.currentTime;
+      voice.gain.gain.cancelScheduledValues(now);
+      voice.gain.gain.setValueAtTime(Math.max(voice.gain.gain.value, minGain), now);
+      voice.gain.gain.exponentialRampToValueAtTime(minGain, now + releaseTimeSec);
+      voice.oscillator.stop(now + releaseTimeSec);
+      voice.oscillator.onended = () => {
+        voice.oscillator.disconnect();
+        voice.gain.disconnect();
+      };
     }
     oscillators.delete(note.frequency);
     updateMasterGain();
   }
   function stopAllNotes() {
     for (const voice of oscillators.values()) {
-      voice.oscillator.stop();
-      voice.oscillator.disconnect();
-      voice.gain.disconnect();
+      const now = audioCtx.currentTime;
+      voice.gain.gain.cancelScheduledValues(now);
+      voice.gain.gain.setValueAtTime(Math.max(voice.gain.gain.value, minGain), now);
+      voice.gain.gain.exponentialRampToValueAtTime(minGain, now + releaseTimeSec);
+      voice.oscillator.stop(now + releaseTimeSec);
+      voice.oscillator.onended = () => {
+        voice.oscillator.disconnect();
+        voice.gain.disconnect();
+      };
     }
     oscillators.clear();
     updateMasterGain();
