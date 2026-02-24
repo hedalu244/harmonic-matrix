@@ -35,6 +35,9 @@
             background-color: #eee;
             color: #000;
         }
+        h3 {
+            margin: 10px 0 5px 0;
+        }
 
         input[readonly] {
             background-color: #aaa;
@@ -53,7 +56,7 @@
     <div id="GUI">
         <div style="text-align: center;">
             <input type="text" id="baseNote" value="A4" pattern="^[A-G][0-8]$" style="width:3em;"> ＝
-            <input type="text" inputmode="numeric" id="baseFreq" value="440" style="width:3em;"> Hz<br>
+            <input type="text" inputmode="numeric" class="integer" id="baseFreq" value="440" style="width:3em;"> Hz<br>
         </div>
         <h3>音律</h3>
         <div style="display: grid; grid-template-columns: 30px auto;">
@@ -67,43 +70,38 @@
                 <input type="radio" name="tuning" id="fromP" checked>
             </span>
             <span>
-                P ＝ <input type="text" inputmode="numeric" id="PVal" value="2" style="width:10em;">
+                P ＝ <input type="text" inputmode="numeric" class="integer" id="PVal" value="2" style="width:10em;">
             </span>
             <span>
                 <input type="radio" name="tuning" id="fromQ">
             </span>
             <span>
-                Q ＝ <input type="text" inputmode="numeric" id="QVal" value="0" style="width:10em;" readonly>
+                Q ＝ <input type="text" inputmode="numeric" class="integer" id="QVal" value="0" style="width:10em;" readonly>
             </span>
             <span>
                 <input type="radio" name="tuning" id="fromS">
             </span>
             <span>
-                S ＝ <input type="text" inputmode="numeric" id="SVal" value="0" style="width:10em;" readonly>
+                S ＝ <input type="text" inputmode="numeric" class="integer" id="SVal" value="0" style="width:10em;" readonly>
             </span>
             <span></span>
             <span>
                 log P ： log Q ＝
-                <input type="text" inputmode="numeric" id="pVal" value="12" style="width:2em;"> ：
-                <input type="text" inputmode="numeric" id="qVal" value="19" style="width:2em;">
+                <input type="text" inputmode="numeric" class="integer" id="pVal" value="12" style="width:2em;"> ：
+                <input type="text" inputmode="numeric" class="integer" id="qVal" value="19" style="width:2em;">
             </span>
         </div>
         <span style="font-size: small;"><input type="checkbox" id="autopq" checked> 自動で整数比を調整<br></span>
         <details>
-            <summary>音律の説明</summary>
+            <summary>説明</summary>
             各音階は、2を近似するPと3を近似するQをもとに、基準の周波数をP<sup>n</sup>×Q<sup>m</sup>倍することで作られます。<br>
             純正律の場合、PとQを直接指定します。この場合、step数は表示されません。<br>
             それ以外では、S = P<sup>1/p</sup>, Q = P<sup>1/q</sup>となるように、P,R,Sのうち1つを入力すると残り二つが定まります。<br>
             「自動で整数比を調整」をオンにすると、log Pかlog Qの片方を入力したときにlog P：log Q≒log 2：log 3となるように、もう片方が自動的に変更されます。
         </details>
 
-        <!--
-        <h3>行列</h3>
-        matrix = { a: 1, b: -2, c: 2, d: -3 }
-        -->
-
         <h3>モード</h3>
-        <input type="radio" name="playMode" id="playModeHold" checked> ホールド<br>
+        <input type="radio" name="playMode" id="playModeHold" checked> ホールド
         <input type="radio" name="playMode" id="playModeToggle"> トグル<br>
         <!--
         <div style="display: grid; gap:5px 20px; grid-template-columns: auto auto;">
@@ -112,6 +110,12 @@
         </div>
         -->
 
+        <h3>行列</h3>
+            <input type="text" inputmode="numeric" class="decimal" id="matrixA" value="1" style="width:2em;">
+            <input type="text" inputmode="numeric" class="decimal" id="matrixB" value="-2" style="width:2em;"> <br>
+            <input type="text" inputmode="numeric" class="decimal" id="matrixC" value="2" style="width:2em;">
+            <input type="text" inputmode="numeric" class="decimal" id="matrixD" value="-3" style="width:2em;">
+            <input type="checkbox" id="matrixNormalize" checked>行列式で正規化<br>
         <h3>表示</h3>
         <div style="display: grid; gap:5px 20px; grid-template-columns: auto auto;">
             <span style="text-align: center; grid-area: 1 / 1 / 2 / 3;">
@@ -119,11 +123,11 @@
                 <input type="text" id="maxNote" value="A7" style="width:2em;">
             </span>
             <span style="text-align: right;">
-                <input type="text" inputmode="numeric" id="flatNum" value="3" style="width:2em;">
+                <input type="text" inputmode="numeric" class="integer" id="flatNum" value="3" style="width:2em;">
             </span>
             <span>フラット</span>
             <span style="text-align: right;">
-                <input type="text" inputmode="numeric" id="sharpNum" value="3" style="width:2em;">
+                <input type="text" inputmode="numeric" class="integer" id="sharpNum" value="3" style="width:2em;">
             </span>
             <span>シャープ</span>
         </div>

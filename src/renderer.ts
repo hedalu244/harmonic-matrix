@@ -15,7 +15,7 @@ export function noteToPos(note: Note, matrix: Matrix): Vector {
     return applyMatrix(matrix, vector);
 }
 export function NoteSize(): number {
-    return settings.size * 0.8;
+    return settings.scale * 0.8;
 }
 
 function noteToHue(note: Note): number {
@@ -33,29 +33,29 @@ function drawNote(p5: p5_, note: Note) {
     if (isPlaying(note)) {
         p5.fill(oklch(p5, 0.6, 0.2, hue));
         p5.stroke(oklch(p5, 0.8, 0.2, hue));
-        p5.circle(pos.x, pos.y, settings.size * 0.8);
+        p5.circle(pos.x, pos.y, settings.scale * 0.8);
     }
     else {
         p5.fill(oklch(p5, 0.3, 0.2, hue));
         p5.stroke(oklch(p5, 0.8, 0.2, hue));
-        p5.circle(pos.x, pos.y, settings.size * 0.6);
+        p5.circle(pos.x, pos.y, settings.scale * 0.6);
     }
 
     p5.textAlign(p5.CENTER, p5.CENTER);
     p5.fill(255);
     p5.noStroke()
 
-    p5.textSize(settings.size * 0.25);
-    p5.text(`${note.name}${note.oct}`, pos.x, pos.y - settings.size * 0.15);
+    p5.textSize(settings.scale * 0.25);
+    p5.text(`${note.name}${note.oct}`, pos.x, pos.y - settings.scale * 0.15);
 
-    p5.textSize(settings.size * 0.15);
+    p5.textSize(settings.scale * 0.15);
     if (note.steps !== null && settings.showSteps) {
         p5.text(`［${note.monzo.m} ${note.monzo.n}〉= ${note.steps} \n ${note.frequency.toFixed(1)}Hz`,
-            pos.x, pos.y + settings.size * 0.2);
+            pos.x, pos.y + settings.scale * 0.2);
     }
     else {
         p5.text(`［${note.monzo.m} ${note.monzo.n}〉 \n ${note.frequency.toFixed(1)}Hz`,
-            pos.x, pos.y + settings.size * 0.2);
+            pos.x, pos.y + settings.scale * 0.2);
     }
     p5.pop();
 }

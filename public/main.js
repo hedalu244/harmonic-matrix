@@ -41,6 +41,17 @@
       y: matrix.b * vector.x + matrix.d * vector.y
     };
   }
+  function determinant(matrix) {
+    return matrix.a * matrix.d - matrix.b * matrix.c;
+  }
+  function normalizeMatrix(matrix) {
+    const det = determinant(matrix);
+    if (det === 0) {
+      return matrix;
+    }
+    const scale = 1 / Math.sqrt(Math.abs(det));
+    return scaleMatrix(matrix, scale);
+  }
 
   // src/oklch.ts
   function dot(a, b) {
@@ -282,7 +293,8 @@
     notes: [],
     matrix: { a: 1, b: -2, c: 2, d: -3 },
     scaledMatrix: scaleMatrix({ a: 1, b: -2, c: 2, d: -3 }, 100),
-    size: 100,
+    gap: 100,
+    scale: 100,
     playMode: "hold",
     showSteps: false
   };
@@ -460,6 +472,21 @@
       stopAllNotes();
     }
   }
+  function updateMatrix() {
+    const a = parseFloat(getInputElement("matrixA").value);
+    const b = parseFloat(getInputElement("matrixB").value);
+    const c = parseFloat(getInputElement("matrixC").value);
+    const d = parseFloat(getInputElement("matrixD").value);
+    if (isNaN(a) || isNaN(b) || isNaN(c) || isNaN(d)) {
+      console.warn("Invalid input for matrix: ", { a, b, c, d });
+      return;
+    }
+    if (getInputElement("matrixNormalize").checked)
+      settings.matrix = normalizeMatrix({ a, b, c, d });
+    else
+      settings.matrix = { a, b, c, d };
+    settings.scaledMatrix = scaleMatrix(settings.matrix, settings.gap * settings.scale / 100);
+  }
   function updateScale() {
     const gapInput = getInputElement("gap");
     const scaleInput = getInputElement("scale");
@@ -470,7 +497,8 @@
       return;
     }
     settings.scaledMatrix = scaleMatrix(settings.matrix, gap * scale / 100);
-    settings.size = scale;
+    settings.gap = gap;
+    settings.scale = scale;
   }
   Array.from(document.getElementsByName("tuning")).forEach((input) => {
     input.addEventListener("change", changeTuningMethod);
@@ -502,15 +530,24 @@
   getInputElement("sharpNum").addEventListener("input", updateNotes);
   getInputElement("playModeHold").addEventListener("change", updatePlayMode);
   getInputElement("playModeToggle").addEventListener("change", updatePlayMode);
+  getInputElement("matrixA").addEventListener("input", updateMatrix);
+  getInputElement("matrixB").addEventListener("input", updateMatrix);
+  getInputElement("matrixC").addEventListener("input", updateMatrix);
+  getInputElement("matrixD").addEventListener("input", updateMatrix);
   getInputElement("scale").addEventListener("input", updateScale);
   getInputElement("gap").addEventListener("input", updateScale);
   getInputElement("showSteps").addEventListener("change", () => {
     settings.showSteps = getInputElement("showSteps").checked;
   });
   Array.from(document.getElementsByTagName("input")).forEach((input) => {
-    if (input.inputMode === "numeric") {
+    if (input.classList.contains("integer")) {
       input.addEventListener("input", () => {
-        input.value = input.value.replace(/[^0-9]/g, "");
+        input.value = input.value.replace(/[^0-9-]/g, "");
+      });
+    }
+    if (input.classList.contains("decimal")) {
+      input.addEventListener("input", () => {
+        input.value = input.value.replace(/[^0-9.-]/g, "");
       });
     }
   });
@@ -536,31 +573,31 @@
     if (isPlaying(note)) {
       p52.fill(oklch(p52, 0.6, 0.2, hue));
       p52.stroke(oklch(p52, 0.8, 0.2, hue));
-      p52.circle(pos.x, pos.y, settings.size * 0.8);
+      p52.circle(pos.x, pos.y, settings.scale * 0.8);
     } else {
       p52.fill(oklch(p52, 0.3, 0.2, hue));
       p52.stroke(oklch(p52, 0.8, 0.2, hue));
-      p52.circle(pos.x, pos.y, settings.size * 0.6);
+      p52.circle(pos.x, pos.y, settings.scale * 0.6);
     }
     p52.textAlign(p52.CENTER, p52.CENTER);
     p52.fill(255);
     p52.noStroke();
-    p52.textSize(settings.size * 0.25);
-    p52.text(`${note.name}${note.oct}`, pos.x, pos.y - settings.size * 0.15);
-    p52.textSize(settings.size * 0.15);
+    p52.textSize(settings.scale * 0.25);
+    p52.text(`${note.name}${note.oct}`, pos.x, pos.y - settings.scale * 0.15);
+    p52.textSize(settings.scale * 0.15);
     if (note.steps !== null && settings.showSteps) {
       p52.text(
         `\uFF3B${note.monzo.m} ${note.monzo.n}\u3009= ${note.steps} 
  ${note.frequency.toFixed(1)}Hz`,
         pos.x,
-        pos.y + settings.size * 0.2
+        pos.y + settings.scale * 0.2
       );
     } else {
       p52.text(
         `\uFF3B${note.monzo.m} ${note.monzo.n}\u3009 
  ${note.frequency.toFixed(1)}Hz`,
         pos.x,
-        pos.y + settings.size * 0.2
+        pos.y + settings.scale * 0.2
       );
     }
     p52.pop();

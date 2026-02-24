@@ -1,4 +1,4 @@
-import { Matrix, scaleMatrix } from "./matrix";
+import { Matrix, normalizeMatrix, scaleMatrix } from "./matrix";
 import { makeVal_justIntonation, makeVal_fromP, makeVal_fromQ, Val, makeVal_fromS } from "./monzo";
 import { generateNotes, Note } from "./note";
 import * as player from "./player";
@@ -8,7 +8,8 @@ interface GUISettings {
     notes: Note[],
     matrix: Matrix,
     scaledMatrix: Matrix,
-    size: number,
+    gap: number,
+    scale: number,
 
     playMode: "hold" | "toggle",
     showSteps: boolean,
@@ -19,7 +20,8 @@ export const settings: GUISettings = {
     notes: [],
     matrix: { a: 1, b: -2, c: 2, d: -3 },
     scaledMatrix: scaleMatrix({ a: 1, b: -2, c: 2, d: -3 }, 100),
-    size: 100,
+    gap: 100,
+    scale: 100,
     playMode: "hold",
     showSteps: false,
 };
@@ -217,6 +219,24 @@ function updatePlayMode() {
     }
 }
 
+function updateMatrix() {
+    const a = parseFloat(getInputElement("matrixA").value);
+    const b = parseFloat(getInputElement("matrixB").value);
+    const c = parseFloat(getInputElement("matrixC").value);
+    const d = parseFloat(getInputElement("matrixD").value);
+
+    if (isNaN(a) || isNaN(b) || isNaN(c) || isNaN(d)) {
+        console.warn("Invalid input for matrix: ", { a, b, c, d });
+        return;
+    }
+    if (getInputElement("matrixNormalize").checked)
+        settings.matrix = normalizeMatrix({ a, b, c, d });
+    else
+        settings.matrix = { a, b, c, d };
+    
+    settings.scaledMatrix = scaleMatrix(settings.matrix, settings.gap * settings.scale / 100);
+}
+
 function updateScale() {
     const gapInput = getInputElement("gap");
     const scaleInput = getInputElement("scale");
@@ -229,17 +249,13 @@ function updateScale() {
         return;
     }
     settings.scaledMatrix = scaleMatrix(settings.matrix, gap * scale / 100);
-    settings.size = scale;
+    settings.gap = gap;
+    settings.scale = scale;
 }
 
 Array.from(document.getElementsByName("tuning")).forEach(input => {
     input.addEventListener("change", changeTuningMethod);
 });
-
-function autoAppox_fromP() {
-}
-function autoAppox_fromQ() {
-}
 
 getInputElement("baseFreq").addEventListener("input", updateVal);
 getInputElement("PVal").addEventListener("input", updateVal);
@@ -271,6 +287,11 @@ getInputElement("sharpNum").addEventListener("input", updateNotes);
 getInputElement("playModeHold").addEventListener("change", updatePlayMode);
 getInputElement("playModeToggle").addEventListener("change", updatePlayMode);
 
+getInputElement("matrixA").addEventListener("input", updateMatrix);
+getInputElement("matrixB").addEventListener("input", updateMatrix);
+getInputElement("matrixC").addEventListener("input", updateMatrix);
+getInputElement("matrixD").addEventListener("input", updateMatrix);
+
 getInputElement("scale").addEventListener("input", updateScale);
 getInputElement("gap").addEventListener("input", updateScale);
 
@@ -279,10 +300,16 @@ getInputElement("showSteps").addEventListener("change", () => {
 });
 
 Array.from(document.getElementsByTagName("input")).forEach(input => {
-    if (input.inputMode === "numeric") {
+    if (input.classList.contains("integer")) {
         input.addEventListener("input", () => {
             // 数字以外の文字を削除
-            input.value = input.value.replace(/[^0-9]/g, "");
+            input.value = input.value.replace(/[^0-9-]/g, "");
+        });
+    }
+    if (input.classList.contains("decimal")) {
+        input.addEventListener("input", () => {
+            // 数字以外の文字を削除
+            input.value = input.value.replace(/[^0-9.-]/g, "");
         });
     }
 });
