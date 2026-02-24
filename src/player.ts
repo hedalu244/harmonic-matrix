@@ -1,26 +1,4 @@
-import type p5_ from "p5";
-import { getFrequency, Monzo, Val } from "./monzo";
-import { Vector, Matrix, applyMatrix } from "./matrix";
 import { Note } from "./note";
-import { noteToPos } from "./renderer";
-import { settings } from "./gui";
-
-export function getClickedNote(p5: p5_, notes: Note[], matrix: Matrix): Note | null {
-    const nearest = { note: null as Note | null, dist: Infinity };
-    console.log(`Mouse: (${p5.mouseX}, ${p5.mouseY})`);
-    for (const note of notes) {
-        const pos = noteToPos(note, matrix);
-        const d = p5.dist(p5.mouseX - p5.width / 2, p5.mouseY - p5.height / 2, pos.x, pos.y);
-        if (d < nearest.dist) {
-            nearest.note = note;
-            nearest.dist = d;
-        }
-    }
-    // const ans = nearest.dist <= size * 0.7 ? nearest.note : null;
-    const ans = nearest.note;
-    console.log(ans);
-    return ans;
-}
 
 const audioCtx = new AudioContext();
 const masterGain = audioCtx.createGain();
@@ -51,7 +29,7 @@ function updateMasterGain() {
     masterGain.gain.setTargetAtTime(0.6 * safe, audioCtx.currentTime, 0.01);
 }
 
-function playNote(note: Note) {
+export function playNote(note: Note) {
     const frequency = note.frequency;
     const oscillator = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
@@ -66,7 +44,7 @@ function playNote(note: Note) {
     updateMasterGain();
 }
 
-function stopNote(note: Note) {
+export function stopNote(note: Note) {
     const voice = oscillators.get(note.frequency);
     if (voice) {
         const now = audioCtx.currentTime;
@@ -97,37 +75,4 @@ export function stopAllNotes() {
     }
     oscillators.clear();
     updateMasterGain();
-}
-
-export function onMouseDown(p5: p5_, notes: Note[], matrix: Matrix) {
-    const note = getClickedNote(p5, notes, matrix);
-
-    if (settings.playMode === "toggle") {
-        if (note) {
-            if (isPlaying(note))
-                stopNote(note);
-            else
-                playNote(note);
-        }
-    }
-    if (settings.playMode === "hold")
-    if (note) {
-        playNote(note);
-    }
-}
-
-export function onMouseMoved(p5: p5_, notes: Note[], matrix: Matrix) {
-    /*
-    const note = getClickedNote(p5, notes, matrix);
-    if (note !== playingNote) {
-        stopNote();
-        if (note) {
-            playNote(note);
-        }
-    }*/
-}
-export function onMouseUp(p5: p5_) {
-    if (settings.playMode === "hold") {
-        stopAllNotes();
-    }
 }

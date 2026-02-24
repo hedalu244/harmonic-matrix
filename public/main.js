@@ -1,20 +1,4 @@
 (() => {
-  // src/matrix.ts
-  function scaleMatrix(matrix, scale) {
-    return {
-      a: matrix.a * scale,
-      b: matrix.b * scale,
-      c: matrix.c * scale,
-      d: matrix.d * scale
-    };
-  }
-  function applyMatrix(matrix, vector) {
-    return {
-      x: matrix.a * vector.x + matrix.c * vector.y,
-      y: matrix.b * vector.x + matrix.d * vector.y
-    };
-  }
-
   // src/monzo.ts
   function getFrequency(val, monzo) {
     return val.baseFreq * Math.pow(val.P, monzo.m) * Math.pow(val.Q, monzo.n);
@@ -40,6 +24,139 @@
   }
   function makeVal_justIntonation(P, Q, baseFreq) {
     return { P, Q, S: null, p: null, q: null, baseFreq };
+  }
+
+  // src/matrix.ts
+  function scaleMatrix(matrix, scale) {
+    return {
+      a: matrix.a * scale,
+      b: matrix.b * scale,
+      c: matrix.c * scale,
+      d: matrix.d * scale
+    };
+  }
+  function applyMatrix(matrix, vector) {
+    return {
+      x: matrix.a * vector.x + matrix.c * vector.y,
+      y: matrix.b * vector.x + matrix.d * vector.y
+    };
+  }
+
+  // src/oklch.ts
+  function dot(a, b) {
+    return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+  }
+  function linearConversion(mat, vec) {
+    return mat.map((row) => dot(row, vec));
+  }
+  function LCHtoLAB(lch) {
+    let [l, c, h] = lch;
+    const a = c * Math.cos(h / 180 * Math.PI);
+    const b = c * Math.sin(h / 180 * Math.PI);
+    return [l, a, b];
+  }
+  function LABtoLMS_(lab) {
+    const M2_INV = [
+      [1, 0.3963377774, 0.2158037573],
+      [1, -0.1055613458, -0.0638541728],
+      [1, -0.0894841775, -1.291485548]
+    ];
+    return linearConversion(M2_INV, lab);
+  }
+  function LMStoLRGB(lms) {
+    const M1_INV = [
+      [4.0767416621, -3.3077115913, 0.2309699292],
+      [-1.2684380046, 2.6097574011, -0.3413193965],
+      [-0.0041960863, -0.7034186147, 1.707614701]
+    ];
+    return linearConversion(M1_INV, lms);
+  }
+  function LRGBtoSRGB(lrgb) {
+    return lrgb.map((c) => {
+      const abs = Math.abs(c);
+      return abs > 31308e-7 ? (Math.sign(c) || 1) * (1.055 * Math.pow(abs, 1 / 2.4) - 0.055) : c * 12.92;
+    });
+  }
+  function oklchToSrgb(lch) {
+    const lab = LCHtoLAB(lch);
+    const lms_ = LABtoLMS_(lab);
+    const lms = lms_.map((c) => c * c * c);
+    const lrgb = LMStoLRGB(lms);
+    const srgb = LRGBtoSRGB(lrgb);
+    return srgb;
+  }
+  function oklch(p52, l, c, h) {
+    const [r, g, b] = oklchToSrgb([l, c, h]);
+    p52.colorMode(p52.RGB, 255);
+    return p52.color(r * 255, g * 255, b * 255);
+  }
+
+  // src/player.ts
+  var audioCtx = new AudioContext();
+  var masterGain = audioCtx.createGain();
+  var compressor = audioCtx.createDynamicsCompressor();
+  masterGain.gain.value = 0.6;
+  compressor.threshold.value = -18;
+  compressor.knee.value = 24;
+  compressor.ratio.value = 4;
+  compressor.attack.value = 3e-3;
+  compressor.release.value = 0.25;
+  masterGain.connect(compressor);
+  compressor.connect(audioCtx.destination);
+  var oscillators = /* @__PURE__ */ new Map();
+  var releaseTimeSec = 0.01;
+  var minGain = 1e-4;
+  function isPlaying(note) {
+    return oscillators.has(note.frequency);
+  }
+  function updateMasterGain() {
+    const active = oscillators.size;
+    const safe = active > 0 ? 1 / Math.sqrt(active) : 1;
+    masterGain.gain.setTargetAtTime(0.6 * safe, audioCtx.currentTime, 0.01);
+  }
+  function playNote(note) {
+    const frequency = note.frequency;
+    const oscillator = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    oscillator.type = "sine";
+    oscillator.frequency.setValueAtTime(frequency, audioCtx.currentTime);
+    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+    oscillator.connect(gain);
+    gain.connect(masterGain);
+    oscillator.start();
+    oscillators.set(frequency, { oscillator, gain });
+    updateMasterGain();
+  }
+  function stopNote(note) {
+    const voice = oscillators.get(note.frequency);
+    if (voice) {
+      const now = audioCtx.currentTime;
+      voice.gain.gain.cancelScheduledValues(now);
+      voice.gain.gain.setValueAtTime(Math.max(voice.gain.gain.value, minGain), now);
+      voice.gain.gain.exponentialRampToValueAtTime(minGain, now + releaseTimeSec);
+      voice.oscillator.stop(now + releaseTimeSec);
+      voice.oscillator.onended = () => {
+        voice.oscillator.disconnect();
+        voice.gain.disconnect();
+      };
+    }
+    oscillators.delete(note.frequency);
+    updateMasterGain();
+  }
+  function stopAllNotes() {
+    for (const voice of oscillators.values()) {
+      const now = audioCtx.currentTime;
+      voice.gain.gain.cancelScheduledValues(now);
+      voice.gain.gain.setValueAtTime(Math.max(voice.gain.gain.value, minGain), now);
+      voice.gain.gain.exponentialRampToValueAtTime(minGain, now + releaseTimeSec);
+      voice.oscillator.stop(now + releaseTimeSec);
+      voice.oscillator.onended = () => {
+        voice.oscillator.disconnect();
+        voice.gain.disconnect();
+      };
+    }
+    oscillators.clear();
+    updateMasterGain();
   }
 
   // src/note.ts
@@ -157,227 +274,6 @@
         steps: getSteps(val, monzo)
       };
     }).sort((a, b) => a.frequency - b.frequency).filter((note) => note.frequency >= minFrequency && note.frequency <= maxFrequency);
-  }
-
-  // src/oklch.ts
-  function dot(a, b) {
-    return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
-  }
-  function linearConversion(mat, vec) {
-    return mat.map((row) => dot(row, vec));
-  }
-  function LCHtoLAB(lch) {
-    let [l, c, h] = lch;
-    const a = c * Math.cos(h / 180 * Math.PI);
-    const b = c * Math.sin(h / 180 * Math.PI);
-    return [l, a, b];
-  }
-  function LABtoLMS_(lab) {
-    const M2_INV = [
-      [1, 0.3963377774, 0.2158037573],
-      [1, -0.1055613458, -0.0638541728],
-      [1, -0.0894841775, -1.291485548]
-    ];
-    return linearConversion(M2_INV, lab);
-  }
-  function LMStoLRGB(lms) {
-    const M1_INV = [
-      [4.0767416621, -3.3077115913, 0.2309699292],
-      [-1.2684380046, 2.6097574011, -0.3413193965],
-      [-0.0041960863, -0.7034186147, 1.707614701]
-    ];
-    return linearConversion(M1_INV, lms);
-  }
-  function LRGBtoSRGB(lrgb) {
-    return lrgb.map((c) => {
-      const abs = Math.abs(c);
-      return abs > 31308e-7 ? (Math.sign(c) || 1) * (1.055 * Math.pow(abs, 1 / 2.4) - 0.055) : c * 12.92;
-    });
-  }
-  function oklchToSrgb(lch) {
-    const lab = LCHtoLAB(lch);
-    const lms_ = LABtoLMS_(lab);
-    const lms = lms_.map((c) => c * c * c);
-    const lrgb = LMStoLRGB(lms);
-    const srgb = LRGBtoSRGB(lrgb);
-    return srgb;
-  }
-  function oklch(p52, l, c, h) {
-    const [r, g, b] = oklchToSrgb([l, c, h]);
-    p52.colorMode(p52.RGB, 255);
-    return p52.color(r * 255, g * 255, b * 255);
-  }
-
-  // src/renderer.ts
-  function noteToPos(note, matrix) {
-    const vector = {
-      x: note.monzo.m,
-      y: note.monzo.n
-    };
-    return applyMatrix(matrix, vector);
-  }
-  function fmod(a, b) {
-    return a - b * Math.floor(a / b);
-  }
-  function noteToHue(note) {
-    return fmod(note.monzo.n * Math.log(note.val.Q) / Math.log(note.val.P) * 360 + 20, 360);
-  }
-  function drawNote(p52, note, matrix, size, showSteps) {
-    p52.push();
-    const hue = noteToHue(note);
-    const pos = noteToPos(note, matrix);
-    if (isPlaying(note)) {
-      p52.fill(oklch(p52, 0.6, 0.2, hue));
-      p52.stroke(oklch(p52, 0.8, 0.2, hue));
-      p52.circle(pos.x, pos.y, size * 0.8);
-    } else {
-      p52.fill(oklch(p52, 0.3, 0.2, hue));
-      p52.stroke(oklch(p52, 0.8, 0.2, hue));
-      p52.circle(pos.x, pos.y, size * 0.6);
-    }
-    p52.textAlign(p52.CENTER, p52.CENTER);
-    p52.fill(255);
-    p52.noStroke();
-    p52.textSize(size * 0.25);
-    p52.text(`${note.name}${note.oct}`, pos.x, pos.y - size * 0.15);
-    p52.textSize(size * 0.15);
-    if (note.steps !== null && showSteps) {
-      p52.text(`\uFF3B${note.monzo.m} ${note.monzo.n}\u3009= ${note.steps} 
- ${note.frequency.toFixed(1)}Hz`, pos.x, pos.y + size * 0.2);
-    } else {
-      p52.text(`\uFF3B${note.monzo.m} ${note.monzo.n}\u3009 
- ${note.frequency.toFixed(1)}Hz`, pos.x, pos.y + size * 0.2);
-    }
-    p52.pop();
-  }
-  function drawOctaveGrid(p52, val, matrix, color = 200) {
-    p52.push();
-    const incline = applyMatrix(matrix, { x: Math.log(val.Q), y: -Math.log(val.P) });
-    const octave = applyMatrix(matrix, { x: 1, y: 0 });
-    const scale = 100;
-    const num = 5;
-    p52.stroke(color);
-    p52.line(
-      -octave.x * scale,
-      -octave.y * scale,
-      octave.x * scale,
-      octave.y * scale
-    );
-    for (let i = -num; i <= num; i++) {
-      p52.line(
-        -incline.x * scale + octave.x * i,
-        -incline.y * scale + octave.y * i,
-        incline.x * scale + octave.x * i,
-        incline.y * scale + octave.y * i
-      );
-    }
-    p52.pop();
-  }
-
-  // src/player.ts
-  function getClickedNote(p52, notes, matrix) {
-    const nearest = { note: null, dist: Infinity };
-    console.log(`Mouse: (${p52.mouseX}, ${p52.mouseY})`);
-    for (const note of notes) {
-      const pos = noteToPos(note, matrix);
-      const d = p52.dist(p52.mouseX - p52.width / 2, p52.mouseY - p52.height / 2, pos.x, pos.y);
-      if (d < nearest.dist) {
-        nearest.note = note;
-        nearest.dist = d;
-      }
-    }
-    const ans = nearest.note;
-    console.log(ans);
-    return ans;
-  }
-  var audioCtx = new AudioContext();
-  var masterGain = audioCtx.createGain();
-  var compressor = audioCtx.createDynamicsCompressor();
-  masterGain.gain.value = 0.6;
-  compressor.threshold.value = -18;
-  compressor.knee.value = 24;
-  compressor.ratio.value = 4;
-  compressor.attack.value = 3e-3;
-  compressor.release.value = 0.25;
-  masterGain.connect(compressor);
-  compressor.connect(audioCtx.destination);
-  var oscillators = /* @__PURE__ */ new Map();
-  var releaseTimeSec = 0.01;
-  var minGain = 1e-4;
-  function isPlaying(note) {
-    return oscillators.has(note.frequency);
-  }
-  function updateMasterGain() {
-    const active = oscillators.size;
-    const safe = active > 0 ? 1 / Math.sqrt(active) : 1;
-    masterGain.gain.setTargetAtTime(0.6 * safe, audioCtx.currentTime, 0.01);
-  }
-  function playNote(note) {
-    const frequency = note.frequency;
-    const oscillator = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    oscillator.type = "sine";
-    oscillator.frequency.setValueAtTime(frequency, audioCtx.currentTime);
-    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-    oscillator.connect(gain);
-    gain.connect(masterGain);
-    oscillator.start();
-    oscillators.set(frequency, { oscillator, gain });
-    updateMasterGain();
-  }
-  function stopNote(note) {
-    const voice = oscillators.get(note.frequency);
-    if (voice) {
-      const now = audioCtx.currentTime;
-      voice.gain.gain.cancelScheduledValues(now);
-      voice.gain.gain.setValueAtTime(Math.max(voice.gain.gain.value, minGain), now);
-      voice.gain.gain.exponentialRampToValueAtTime(minGain, now + releaseTimeSec);
-      voice.oscillator.stop(now + releaseTimeSec);
-      voice.oscillator.onended = () => {
-        voice.oscillator.disconnect();
-        voice.gain.disconnect();
-      };
-    }
-    oscillators.delete(note.frequency);
-    updateMasterGain();
-  }
-  function stopAllNotes() {
-    for (const voice of oscillators.values()) {
-      const now = audioCtx.currentTime;
-      voice.gain.gain.cancelScheduledValues(now);
-      voice.gain.gain.setValueAtTime(Math.max(voice.gain.gain.value, minGain), now);
-      voice.gain.gain.exponentialRampToValueAtTime(minGain, now + releaseTimeSec);
-      voice.oscillator.stop(now + releaseTimeSec);
-      voice.oscillator.onended = () => {
-        voice.oscillator.disconnect();
-        voice.gain.disconnect();
-      };
-    }
-    oscillators.clear();
-    updateMasterGain();
-  }
-  function onMouseDown(p52, notes, matrix) {
-    const note = getClickedNote(p52, notes, matrix);
-    if (settings.playMode === "toggle") {
-      if (note) {
-        if (isPlaying(note))
-          stopNote(note);
-        else
-          playNote(note);
-      }
-    }
-    if (settings.playMode === "hold") {
-      if (note) {
-        playNote(note);
-      }
-    }
-  }
-  function onMouseMoved(p52, notes, matrix) {
-  }
-  function onMouseUp(p52) {
-    if (settings.playMode === "hold") {
-      stopAllNotes();
-    }
   }
 
   // src/gui.ts
@@ -605,6 +501,125 @@
     }
   });
 
+  // src/renderer.ts
+  function noteToPos(note, matrix) {
+    const vector = {
+      x: note.monzo.m,
+      y: note.monzo.n
+    };
+    return applyMatrix(matrix, vector);
+  }
+  function noteToHue(note) {
+    function fmod(a, b) {
+      return a - b * Math.floor(a / b);
+    }
+    return fmod(note.monzo.n * Math.log(note.val.Q) / Math.log(note.val.P) * 360 + 20, 360);
+  }
+  function drawNote(p52, note) {
+    p52.push();
+    const hue = noteToHue(note);
+    const pos = noteToPos(note, settings.scaledMatrix);
+    if (isPlaying(note)) {
+      p52.fill(oklch(p52, 0.6, 0.2, hue));
+      p52.stroke(oklch(p52, 0.8, 0.2, hue));
+      p52.circle(pos.x, pos.y, settings.size * 0.8);
+    } else {
+      p52.fill(oklch(p52, 0.3, 0.2, hue));
+      p52.stroke(oklch(p52, 0.8, 0.2, hue));
+      p52.circle(pos.x, pos.y, settings.size * 0.6);
+    }
+    p52.textAlign(p52.CENTER, p52.CENTER);
+    p52.fill(255);
+    p52.noStroke();
+    p52.textSize(settings.size * 0.25);
+    p52.text(`${note.name}${note.oct}`, pos.x, pos.y - settings.size * 0.15);
+    p52.textSize(settings.size * 0.15);
+    if (note.steps !== null && settings.showSteps) {
+      p52.text(
+        `\uFF3B${note.monzo.m} ${note.monzo.n}\u3009= ${note.steps} 
+ ${note.frequency.toFixed(1)}Hz`,
+        pos.x,
+        pos.y + settings.size * 0.2
+      );
+    } else {
+      p52.text(
+        `\uFF3B${note.monzo.m} ${note.monzo.n}\u3009 
+ ${note.frequency.toFixed(1)}Hz`,
+        pos.x,
+        pos.y + settings.size * 0.2
+      );
+    }
+    p52.pop();
+  }
+  function drawNotes(p52) {
+    settings.notes.forEach((note) => {
+      drawNote(p52, note);
+    });
+  }
+  function drawOctaveGrid(p52, val, matrix, color = 200) {
+    p52.push();
+    const incline = applyMatrix(matrix, { x: Math.log(val.Q), y: -Math.log(val.P) });
+    const octave = applyMatrix(matrix, { x: 1, y: 0 });
+    const scale = 100;
+    const num = 5;
+    p52.stroke(color);
+    p52.line(
+      -octave.x * scale,
+      -octave.y * scale,
+      octave.x * scale,
+      octave.y * scale
+    );
+    for (let i = -num; i <= num; i++) {
+      p52.line(
+        -incline.x * scale + octave.x * i,
+        -incline.y * scale + octave.y * i,
+        incline.x * scale + octave.x * i,
+        incline.y * scale + octave.y * i
+      );
+    }
+    p52.pop();
+  }
+
+  // src/mouseEvent.ts
+  function getClickedNote(p52, notes, matrix) {
+    const nearest = { note: null, dist: Infinity };
+    console.log(`Mouse: (${p52.mouseX}, ${p52.mouseY})`);
+    for (const note of notes) {
+      const pos = noteToPos(note, matrix);
+      const d = p52.dist(p52.mouseX - p52.width / 2, p52.mouseY - p52.height / 2, pos.x, pos.y);
+      if (d < nearest.dist) {
+        nearest.note = note;
+        nearest.dist = d;
+      }
+    }
+    const ans = nearest.note;
+    console.log(ans);
+    return ans;
+  }
+  function onMouseDown(p52, notes, matrix) {
+    const note = getClickedNote(p52, notes, matrix);
+    if (settings.playMode === "toggle") {
+      if (note) {
+        if (isPlaying(note))
+          stopNote(note);
+        else
+          playNote(note);
+      }
+    }
+    if (settings.playMode === "hold") {
+      if (note) {
+        playNote(note);
+      }
+    }
+  }
+  function onMouseMoved(p52, notes, matrix) {
+  }
+  function onMouseUp(p52) {
+    if (settings.playMode === "hold") {
+      stopAllNotes();
+    }
+  }
+
   // src/main.ts
   var canvas = document.getElementById("canvas");
   var sketch = (p) => {
@@ -619,9 +634,7 @@
       p.translate(p.width / 2, p.height / 2);
       drawOctaveGrid(p, settings.val, settings.scaledMatrix);
       drawOctaveGrid(p, makeVal_justIntonation(2, 3, 440), settings.scaledMatrix, 100);
-      settings.notes.forEach((note) => {
-        drawNote(p, note, settings.scaledMatrix, settings.size, settings.showSteps);
-      });
+      drawNotes(p);
     };
     canvas.addEventListener("mousedown", () => {
       onMouseDown(p, settings.notes, settings.scaledMatrix);
