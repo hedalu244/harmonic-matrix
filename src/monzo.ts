@@ -14,7 +14,7 @@ export interface Val {
     q: number | null,
 }
 
-export function getFrequency(monzo: Monzo, val: Val): number {
+export function getFrequency(val: Val,monzo: Monzo): number {
     return val.baseFreq * Math.pow(val.P, monzo.m) * Math.pow(val.Q, monzo.n);
 }
 
@@ -45,6 +45,6 @@ export function makeVal_fromS(p: number, q: number, S: number, baseFreq: number)
     return { P, Q, S, p, q, baseFreq };
 }
 
-export function makeVal_asIrrational(P: number, Q: number, baseFreq: number): Val {
+export function makeVal_justIntonation(P: number, Q: number, baseFreq: number): Val {
     return { P, Q, S: null, p: null, q: null, baseFreq };
 }

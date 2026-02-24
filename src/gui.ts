@@ -175,18 +175,18 @@ function updateVal(): void {
 
 function updateNotes() {
     const baseNoteName = getInputElement("baseNote").value;
-    const minOct = parseInt(getInputElement("minOct").value);
-    const maxOct = parseInt(getInputElement("maxOct").value);
+    const minNoteName = getInputElement("minNote").value;
+    const maxNoteName = getInputElement("maxNote").value;
     const flatNum = parseInt(getInputElement("flatNum").value);
     const sharpNum = parseInt(getInputElement("sharpNum").value);
 
-    if (isNaN(minOct) || isNaN(maxOct) || isNaN(flatNum) || isNaN(sharpNum)) {
-        console.warn("Invalid input for notes: ", { minOct, maxOct, flatNum, sharpNum });
+    if (isNaN(flatNum) || isNaN(sharpNum)) {
+        console.warn("Invalid input for notes: ", { flatNum, sharpNum });
         return;
     }
 
     try {
-        settings.notes = generateNotes(settings.val, baseNoteName, minOct, maxOct, flatNum, sharpNum);
+        settings.notes = generateNotes(settings.val, baseNoteName, minNoteName, maxNoteName, flatNum, sharpNum);
     } catch (error) {
         console.error("Error generating notes:", error);
     }
@@ -214,8 +214,8 @@ getInputElement("pVal").addEventListener("input", updateVal);
 getInputElement("qVal").addEventListener("input", updateVal);
 
 getInputElement("baseNote").addEventListener("input", updateNotes);
-getInputElement("minOct").addEventListener("input", updateNotes);
-getInputElement("maxOct").addEventListener("input", updateNotes);
+getInputElement("minNote").addEventListener("input", updateNotes);
+getInputElement("maxNote").addEventListener("input", updateNotes);
 getInputElement("flatNum").addEventListener("input", updateNotes);
 getInputElement("sharpNum").addEventListener("input", updateNotes);
 

@@ -66,7 +66,14 @@
       monzo
     };
   }
-  function generateNotes(val2, baseNoteName = "A4", minOct = 2, maxOct = 6, flatNum = 1, sharpNum = 1) {
+  function generateNotes(val2, baseNoteName = "A4", minNoteName = "A0", maxNoteName = "C8", flatNum = 1, sharpNum = 1) {
+    const baseMatch = baseNoteName.toUpperCase().match(/([A-G][♭#]*)(\d+)/);
+    const minMatch = minNoteName.toUpperCase().match(/([A-G][♭#]*)(\d+)/);
+    const maxMatch = maxNoteName.toUpperCase().match(/([A-G][♭#]*)(\d+)/);
+    if (!baseMatch || !minMatch || !maxMatch) {
+      console.error("Invalid note name format: ", { baseNoteName, minNoteName, maxNoteName });
+      throw new Error(`Invalid note name format`);
+    }
     const diatonic = [
       { name: "C", oct: 0, monzo: { m: 0, n: 0 } },
       // 0
@@ -94,18 +101,33 @@
         chromatic.push(addSharp(note, i));
       }
     }
-    const notes2 = [];
+    const minOct = Math.min(parseInt(baseMatch[2]), parseInt(minMatch[2]), parseInt(maxMatch[2]));
+    const maxOct = Math.max(parseInt(baseMatch[2]), parseInt(minMatch[2]), parseInt(maxMatch[2]));
+    const temporalNotes = [];
     for (let oct = minOct; oct <= maxOct; oct++) {
       for (const note of chromatic) {
         const octDiff = oct - note.oct;
-        notes2.push(addOctave(note, octDiff));
+        temporalNotes.push(addOctave(note, octDiff));
       }
     }
-    const baseNote = notes2.find((note) => `${note.name}${note.oct}` === baseNoteName);
-    if (!baseNote) {
+    const baseNote = temporalNotes.find((note) => `${note.name}${note.oct}` === baseNoteName);
+    const minNote = temporalNotes.find((note) => `${note.name}${note.oct}` === minNoteName);
+    const maxNote = temporalNotes.find((note) => `${note.name}${note.oct}` === maxNoteName);
+    if (!baseNote)
       throw new Error(`Base note ${baseNoteName} not found`);
-    }
-    return notes2.map((note) => {
+    if (!minNote)
+      throw new Error(`Min note ${minNoteName} not found`);
+    if (!maxNote)
+      throw new Error(`Max note ${maxNoteName} not found`);
+    const minFrequency = getFrequency(val2, {
+      m: minNote.monzo.m - baseNote.monzo.m,
+      n: minNote.monzo.n - baseNote.monzo.n
+    });
+    const maxFrequency = getFrequency(val2, {
+      m: maxNote.monzo.m - baseNote.monzo.m,
+      n: maxNote.monzo.n - baseNote.monzo.n
+    });
+    return temporalNotes.map((note) => {
       const monzo = {
         m: note.monzo.m - baseNote.monzo.m,
         n: note.monzo.n - baseNote.monzo.n
@@ -118,7 +140,7 @@
         frequency: getFrequency(val2, monzo),
         steps: getSteps(val2, monzo)
       };
-    }).sort((a, b) => a.frequency - b.frequency);
+    }).sort((a, b) => a.frequency - b.frequency).filter((note) => note.frequency >= minFrequency && note.frequency <= maxFrequency);
   }
 
   // src/gui.ts
@@ -273,16 +295,16 @@
   }
   function updateNotes() {
     const baseNoteName = getInputElement("baseNote").value;
-    const minOct = parseInt(getInputElement("minOct").value);
-    const maxOct = parseInt(getInputElement("maxOct").value);
+    const minNoteName = getInputElement("minNote").value;
+    const maxNoteName = getInputElement("maxNote").value;
     const flatNum = parseInt(getInputElement("flatNum").value);
     const sharpNum = parseInt(getInputElement("sharpNum").value);
-    if (isNaN(minOct) || isNaN(maxOct) || isNaN(flatNum) || isNaN(sharpNum)) {
-      console.warn("Invalid input for notes: ", { minOct, maxOct, flatNum, sharpNum });
+    if (isNaN(flatNum) || isNaN(sharpNum)) {
+      console.warn("Invalid input for notes: ", { flatNum, sharpNum });
       return;
     }
     try {
-      settings.notes = generateNotes(settings.val, baseNoteName, minOct, maxOct, flatNum, sharpNum);
+      settings.notes = generateNotes(settings.val, baseNoteName, minNoteName, maxNoteName, flatNum, sharpNum);
     } catch (error) {
       console.error("Error generating notes:", error);
     }
@@ -306,8 +328,8 @@
   getInputElement("pVal").addEventListener("input", updateVal);
   getInputElement("qVal").addEventListener("input", updateVal);
   getInputElement("baseNote").addEventListener("input", updateNotes);
-  getInputElement("minOct").addEventListener("input", updateNotes);
-  getInputElement("maxOct").addEventListener("input", updateNotes);
+  getInputElement("minNote").addEventListener("input", updateNotes);
+  getInputElement("maxNote").addEventListener("input", updateNotes);
   getInputElement("flatNum").addEventListener("input", updateNotes);
   getInputElement("sharpNum").addEventListener("input", updateNotes);
   getInputElement("scale").addEventListener("input", updateScale);
