@@ -1,13 +1,174 @@
 (() => {
+  // src/monzo.ts
+  function getFrequency(monzo, val2) {
+    return val2.baseFreq * Math.pow(val2.P, monzo.m) * Math.pow(val2.Q, monzo.n);
+  }
+  function getSteps(val2, monzo) {
+    if (val2.p === null || val2.q === null) return null;
+    return monzo.m * val2.p + monzo.n * val2.q;
+  }
+  function makeVal_fromP(p, q, P, baseFreq) {
+    const S = Math.pow(P, 1 / p);
+    const Q = Math.pow(S, q);
+    return { P, Q, S, p, q, baseFreq };
+  }
+  function makeVal_fromQ(p, q, Q, baseFreq) {
+    const S = Math.pow(Q, 1 / q);
+    const P = Math.pow(S, p);
+    return { P, Q, S, p, q, baseFreq };
+  }
+  function makeVal_fromS(p, q, S, baseFreq) {
+    const P = Math.pow(S, p);
+    const Q = Math.pow(S, q);
+    return { P, Q, S, p, q, baseFreq };
+  }
+  function makeVal_justIntonation(P, Q, baseFreq) {
+    return { P, Q, S: null, p: null, q: null, baseFreq };
+  }
+
+  // src/gui.ts
+  Array.from(document.getElementsByTagName("input")).forEach((input) => {
+    if (input.inputMode === "numeric") {
+      input.addEventListener("input", () => {
+        input.value = input.value.replace(/[^0-9]/g, "");
+      });
+    }
+  });
+  function getInputElement(id) {
+    return document.getElementById(id);
+  }
+  function changeTuningMethod() {
+    console.log("changeTuningMethod called");
+    const Pelm = getInputElement("PVal");
+    const Qelm = getInputElement("QVal");
+    const Selm = getInputElement("SVal");
+    const pelm = getInputElement("pVal");
+    const qelm = getInputElement("qVal");
+    if (getInputElement("fromP").checked) {
+      Pelm.readOnly = false;
+      Qelm.readOnly = true;
+      Selm.readOnly = true;
+      pelm.readOnly = false;
+      qelm.readOnly = false;
+      Pelm.value = "2";
+      if (pelm.value === "" || qelm.value === "") {
+        pelm.value = "12";
+        qelm.value = "19";
+      }
+      readVal();
+      return;
+    }
+    if (getInputElement("fromQ").checked) {
+      Pelm.readOnly = true;
+      Qelm.readOnly = false;
+      Selm.readOnly = true;
+      pelm.readOnly = false;
+      qelm.readOnly = false;
+      Qelm.value = "3";
+      if (pelm.value === "" || qelm.value === "") {
+        pelm.value = "12";
+        qelm.value = "19";
+      }
+      readVal();
+      return;
+    }
+    if (getInputElement("fromS").checked) {
+      Pelm.readOnly = true;
+      Qelm.readOnly = true;
+      Selm.readOnly = false;
+      pelm.readOnly = false;
+      qelm.readOnly = false;
+      Selm.value = "1.0594630943592953";
+      if (pelm.value === "" || qelm.value === "") {
+        pelm.value = "12";
+        qelm.value = "19";
+      }
+      readVal();
+      return;
+    }
+    if (getInputElement("justIntonation").checked) {
+      Pelm.readOnly = false;
+      Qelm.readOnly = false;
+      Selm.readOnly = true;
+      pelm.readOnly = true;
+      qelm.readOnly = true;
+      Pelm.value = "2";
+      Qelm.value = "3";
+      readVal();
+      return;
+    }
+    throw new Error("no tuning method selected");
+  }
+  function readVal() {
+    const baseFreq = parseFloat(getInputElement("baseFreq").value);
+    const Pelm = getInputElement("PVal");
+    const Qelm = getInputElement("QVal");
+    const Selm = getInputElement("SVal");
+    const pelm = getInputElement("pVal");
+    const qelm = getInputElement("qVal");
+    const pVal = parseFloat(pelm.value);
+    const qVal = parseFloat(qelm.value);
+    const PVal = parseFloat(Pelm.value);
+    const QVal = parseFloat(Qelm.value);
+    const SVal = parseFloat(Selm.value);
+    if (getInputElement("fromP").checked) {
+      const val2 = makeVal_fromP(pVal, qVal, PVal, baseFreq);
+      Qelm.value = val2.Q.toString();
+      Qelm.readOnly = true;
+      Selm.value = val2.S.toString();
+      Selm.readOnly = true;
+      return val2;
+    }
+    if (getInputElement("fromQ").checked) {
+      const val2 = makeVal_fromQ(pVal, qVal, QVal, baseFreq);
+      Pelm.value = val2.P.toString();
+      Pelm.readOnly = true;
+      Selm.value = val2.S.toString();
+      Selm.readOnly = true;
+      return val2;
+    }
+    if (getInputElement("fromS").checked) {
+      const val2 = makeVal_fromS(pVal, qVal, SVal, baseFreq);
+      Pelm.value = val2.P.toString();
+      Pelm.readOnly = true;
+      Qelm.value = val2.Q.toString();
+      Qelm.readOnly = true;
+      return val2;
+    }
+    if (getInputElement("justIntonation").checked) {
+      const val2 = makeVal_justIntonation(PVal, QVal, baseFreq);
+      Selm.value = "";
+      Selm.readOnly = true;
+      pelm.value = "";
+      pelm.readOnly = true;
+      qelm.value = "";
+      qelm.readOnly = true;
+      return val2;
+    }
+    throw new Error("no tuning method selected");
+  }
+  Array.from(document.getElementsByName("tuning")).forEach((input) => {
+    input.addEventListener("change", changeTuningMethod);
+  });
+  getInputElement("baseFreq").addEventListener("input", readVal);
+  getInputElement("PVal").addEventListener("input", readVal);
+  getInputElement("QVal").addEventListener("input", readVal);
+  getInputElement("SVal").addEventListener("input", readVal);
+  getInputElement("pVal").addEventListener("input", readVal);
+  getInputElement("qVal").addEventListener("input", readVal);
+
   // src/note.ts
   function addOctave(Note2, n) {
+    const monzo = {
+      m: Note2.monzo.m + n,
+      n: Note2.monzo.n
+    };
     return {
+      val: Note2.val,
+      frequency: getFrequency(monzo, Note2.val),
       name: Note2.name,
       oct: Note2.oct + n,
-      monzo: {
-        m: Note2.monzo.m + n,
-        n: Note2.monzo.n
-      }
+      monzo
     };
   }
   function addFlat(Note2, n) {
@@ -89,23 +250,6 @@
         }
       };
     });
-  }
-
-  // src/monzo.ts
-  function getFrequency(monzo, val2) {
-    return val2.baseFreq * Math.pow(val2.P, monzo.m) * Math.pow(val2.Q, monzo.n);
-  }
-  function getSteps(val2, monzo) {
-    if (val2.p === null || val2.q === null) return null;
-    return monzo.m * val2.p + monzo.n * val2.q;
-  }
-  function makeVal_fromP(p, q, P, baseFreq) {
-    const S = Math.pow(P, 1 / p);
-    const Q = Math.pow(S, q);
-    return { P, Q, S, p, q, baseFreq };
-  }
-  function makeVal_asIrrational(P, Q, baseFreq) {
-    return { P, Q, S: null, p: null, q: null, baseFreq };
   }
 
   // src/matrix.ts
@@ -253,20 +397,17 @@
       p52.circle(pos.x, pos.y, radius * 2);
     }
     p52.textAlign(p52.CENTER, p52.CENTER);
-    p52.textSize(30);
     p52.fill(255);
     p52.noStroke();
     p52.textSize(25);
     p52.text(`${note.name}${note.oct}`, pos.x, pos.y - 15);
     p52.textSize(15);
     if (val2.p !== null && val2.q !== null) {
-      p52.text(`
-\uFF3B${note.monzo.m} ${note.monzo.n}\u3009= ${getSteps(val2, note.monzo)} 
- ${getFrequency(note.monzo, val2).toFixed(1)}Hz`, pos.x, pos.y + 10);
+      p52.text(`\uFF3B${note.monzo.m} ${note.monzo.n}\u3009= ${getSteps(val2, note.monzo)} 
+ ${getFrequency(note.monzo, val2).toFixed(1)}Hz`, pos.x, pos.y + 20);
     } else {
-      p52.text(`
-\uFF3B${note.monzo.m} ${note.monzo.n}\u3009 
- ${getFrequency(note.monzo, val2).toFixed(1)}Hz`, pos.x, pos.y + 10);
+      p52.text(`\uFF3B${note.monzo.m} ${note.monzo.n}\u3009 
+ ${getFrequency(note.monzo, val2).toFixed(1)}Hz`, pos.x, pos.y + 20);
     }
     p52.pop();
   }
@@ -295,10 +436,6 @@
   }
 
   // src/main.ts
-  var notes = generateNotes("A4", 1, 7, 2, 2);
-  var val = makeVal_asIrrational(2, 3, 440);
-  var matrix = { a: 1, b: -2, c: 2, d: -3 };
-  var scale = 100;
   for (const note of notes) {
     const steps = getSteps(val, note.monzo);
     console.log(note, steps);
@@ -311,12 +448,16 @@
       p.resizeCanvas(p.windowWidth, p.windowHeight);
     };
     p.draw = () => {
+      const val2 = makeVal_fromP(17, 27, 2, 440);
+      const notes2 = generateNotes(val2, "A4", 1, 7, 3, 3);
+      const matrix2 = { a: 1, b: -2, c: 2, d: -3 };
+      const scale2 = 100;
       p.background(30);
       p.translate(p.width / 2, p.height / 2);
-      drawOctaveGrid(p, val, scaleMatrix(matrix, scale));
-      drawOctaveGrid(p, makeVal_asIrrational(2, 3, 440), scaleMatrix(matrix, scale), 100);
-      notes.forEach((note) => {
-        drawNote(p, note, scaleMatrix(matrix, scale), val);
+      drawOctaveGrid(p, val2, scaleMatrix(matrix2, scale2));
+      drawOctaveGrid(p, makeVal_justIntonation(2, 3, 440), scaleMatrix(matrix2, scale2), 100);
+      notes2.forEach((note) => {
+        drawNote(p, note, scaleMatrix(matrix2, scale2), val2);
       });
     };
     p.mousePressed = () => {

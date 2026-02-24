@@ -1,12 +1,127 @@
 <!doctype html>
 <html>
+
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>esbuild + TS</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Harmonic Matrix</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-size: 16px;
+            overflow: hidden;
+            color: #fff
+        }
+
+        #GUI {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 300px;
+            z-index: 10;
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        input {
+            text-align: center;
+            font-size: 16px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+
+            background-color: #eee;
+            color: #000;
+        }
+
+        input[readonly] {
+            background-color: #aaa;
+            color: #333;
+        }
+
+        details {
+            font-size: 14px;
+            margin-left: 10px;
+        }
+    </style>
 </head>
+
 <body>
-  <script src="https://cdn.jsdelivr.net/npm/p5/lib/p5.min.js"></script>
-  <script src="./main.js"></script>
+    <div id="GUI">
+        <div style="text-align: center;">
+            <input type="text" id="baseNote" value="A4" pattern="^[A-G][0-8]$" style="width:3em;"> ＝
+            <input type="text" inputmode="numeric" id="baseFreq" value="440" style="width:3em;"> Hz<br>
+        </div>
+        <h3>音律</h3>
+        <div style="display: grid; grid-template-columns: 30px auto;">
+            <span>
+                <input type="radio" name="tuning" id="justIntonation">
+            </span>
+            <span>
+                純正律
+            </span>
+            <span>
+                <input type="radio" name="tuning" id="fromP" checked>
+            </span>
+            <span>
+                P ＝ <input type="text" inputmode="numeric" id="PVal" value="2" style="width:10em;">
+            </span>
+            <span>
+                <input type="radio" name="tuning" id="fromQ">
+            </span>
+            <span>
+                Q ＝ <input type="text" inputmode="numeric" id="QVal" value="0" style="width:10em;" readonly>
+            </span>
+            <span>
+                <input type="radio" name="tuning" id="fromS">
+            </span>
+            <span>
+                S ＝ <input type="text" inputmode="numeric" id="SVal" value="0" style="width:10em;" readonly>
+            </span>
+            <span></span>
+            <span>
+                ln P ： ln Q ＝
+                <input type="text" inputmode="numeric" id="pVal" value="12" style="width:2em;"> ：
+                <input type="text" inputmode="numeric" id="qVal" value="19" style="width:2em;">
+            </span>
+        </div>
+        <details>
+            <summary>音律の説明</summary>
+            各音階は、2を近似するPと3を近似するQをもとに、基準の周波数をP<sup>n</sup>×Q<sup>m</sup>倍することで作られます。<br>
+            純正律の場合、PとQを直接指定します。この場合、step数は表示されません。<br>
+            それ以外では、S = P<sup>1/p</sup>, Q = P<sup>1/q</sup>となるように、P,R,Sのうち1つを入力すると残り二つが定まります。<br>
+        </details>
+
+        <!--
+        <h3>行列</h3>
+        matrix = { a: 1, b: -2, c: 2, d: -3 }
+        -->
+    
+        <h3>表示範囲</h3>
+        <div style="display: grid; grid-template-columns: auto auto;">
+            <span style="text-align: right;">
+                <input type="text" inputmode="numeric" id="minOct" value="1" style="width:2em;">～
+                <input type="text" inputmode="numeric" id="maxOct" value="7" style="width:2em;">
+            </span>
+            <span>オクターブ</span>
+            <span style="text-align: right;">
+                <input type="text" inputmode="numeric" id="flatNum" value="3" style="width:2em;">
+            </span>
+            <span>フラット</span>
+            <span style="text-align: right;">
+                <input type="text" inputmode="numeric" id="sharpNum" value="3" style="width:2em;">
+            </span>
+            <span>シャープ</span>
+        </div>
+
+        <h3>表示スケール</h3>
+        <div style="text-align: center;">
+        <input type="range" id="scale" min="0" max="200" value="100" style="width:200px;">
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/p5/lib/p5.min.js"></script>
+    <script src="./main.js"></script>
 </body>
+
 </html>
