@@ -28,8 +28,8 @@ export function isPlaying(note: Note): boolean {
     return playingNote === note;
 }
 
-function playNote(note: Note, val: Val) {
-    const frequency = getFrequency(note.monzo, val);
+function playNote(note: Note) {
+    const frequency = note.frequency;
     oscillator = audioCtx.createOscillator();
     oscillator.type = "sine";
     oscillator.frequency.setValueAtTime(frequency, audioCtx.currentTime);
@@ -47,20 +47,20 @@ function stopNote() {
     playingNote = null;
 }
 
-export function onMouseDown(p5: p5_, notes: Note[], matrix: Matrix, val: Val) {
+export function onMouseDown(p5: p5_, notes: Note[], matrix: Matrix) {
     const note = getClickedNote(p5, notes, matrix);
     if (note) {
-        playNote(note, val);
+        playNote(note);
     }
 }
 
-export function onMouseMoved(p5: p5_, notes: Note[], matrix: Matrix, val: Val) {
+export function onMouseMoved(p5: p5_, notes: Note[], matrix: Matrix) {
     /*
     const note = getClickedNote(p5, notes, matrix);
     if (note !== playingNote) {
         stopNote();
         if (note) {
-            playNote(note, val);
+            playNote(note);
         }
     }*/
 }

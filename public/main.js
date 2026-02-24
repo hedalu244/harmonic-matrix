@@ -1,6 +1,6 @@
 (() => {
   // src/monzo.ts
-  function getFrequency(monzo, val2) {
+  function getFrequency(val2, monzo) {
     return val2.baseFreq * Math.pow(val2.P, monzo.m) * Math.pow(val2.Q, monzo.n);
   }
   function getSteps(val2, monzo) {
@@ -26,137 +26,6 @@
     return { P, Q, S: null, p: null, q: null, baseFreq };
   }
 
-  // src/gui.ts
-  Array.from(document.getElementsByTagName("input")).forEach((input) => {
-    if (input.inputMode === "numeric") {
-      input.addEventListener("input", () => {
-        input.value = input.value.replace(/[^0-9]/g, "");
-      });
-    }
-  });
-  function getInputElement(id) {
-    return document.getElementById(id);
-  }
-  function changeTuningMethod() {
-    console.log("changeTuningMethod called");
-    const Pelm = getInputElement("PVal");
-    const Qelm = getInputElement("QVal");
-    const Selm = getInputElement("SVal");
-    const pelm = getInputElement("pVal");
-    const qelm = getInputElement("qVal");
-    if (getInputElement("fromP").checked) {
-      Pelm.readOnly = false;
-      Qelm.readOnly = true;
-      Selm.readOnly = true;
-      pelm.readOnly = false;
-      qelm.readOnly = false;
-      Pelm.value = "2";
-      if (pelm.value === "" || qelm.value === "") {
-        pelm.value = "12";
-        qelm.value = "19";
-      }
-      readVal();
-      return;
-    }
-    if (getInputElement("fromQ").checked) {
-      Pelm.readOnly = true;
-      Qelm.readOnly = false;
-      Selm.readOnly = true;
-      pelm.readOnly = false;
-      qelm.readOnly = false;
-      Qelm.value = "3";
-      if (pelm.value === "" || qelm.value === "") {
-        pelm.value = "12";
-        qelm.value = "19";
-      }
-      readVal();
-      return;
-    }
-    if (getInputElement("fromS").checked) {
-      Pelm.readOnly = true;
-      Qelm.readOnly = true;
-      Selm.readOnly = false;
-      pelm.readOnly = false;
-      qelm.readOnly = false;
-      Selm.value = "1.0594630943592953";
-      if (pelm.value === "" || qelm.value === "") {
-        pelm.value = "12";
-        qelm.value = "19";
-      }
-      readVal();
-      return;
-    }
-    if (getInputElement("justIntonation").checked) {
-      Pelm.readOnly = false;
-      Qelm.readOnly = false;
-      Selm.readOnly = true;
-      pelm.readOnly = true;
-      qelm.readOnly = true;
-      Pelm.value = "2";
-      Qelm.value = "3";
-      readVal();
-      return;
-    }
-    throw new Error("no tuning method selected");
-  }
-  function readVal() {
-    const baseFreq = parseFloat(getInputElement("baseFreq").value);
-    const Pelm = getInputElement("PVal");
-    const Qelm = getInputElement("QVal");
-    const Selm = getInputElement("SVal");
-    const pelm = getInputElement("pVal");
-    const qelm = getInputElement("qVal");
-    const pVal = parseFloat(pelm.value);
-    const qVal = parseFloat(qelm.value);
-    const PVal = parseFloat(Pelm.value);
-    const QVal = parseFloat(Qelm.value);
-    const SVal = parseFloat(Selm.value);
-    if (getInputElement("fromP").checked) {
-      const val2 = makeVal_fromP(pVal, qVal, PVal, baseFreq);
-      Qelm.value = val2.Q.toString();
-      Qelm.readOnly = true;
-      Selm.value = val2.S.toString();
-      Selm.readOnly = true;
-      return val2;
-    }
-    if (getInputElement("fromQ").checked) {
-      const val2 = makeVal_fromQ(pVal, qVal, QVal, baseFreq);
-      Pelm.value = val2.P.toString();
-      Pelm.readOnly = true;
-      Selm.value = val2.S.toString();
-      Selm.readOnly = true;
-      return val2;
-    }
-    if (getInputElement("fromS").checked) {
-      const val2 = makeVal_fromS(pVal, qVal, SVal, baseFreq);
-      Pelm.value = val2.P.toString();
-      Pelm.readOnly = true;
-      Qelm.value = val2.Q.toString();
-      Qelm.readOnly = true;
-      return val2;
-    }
-    if (getInputElement("justIntonation").checked) {
-      const val2 = makeVal_justIntonation(PVal, QVal, baseFreq);
-      Selm.value = "";
-      Selm.readOnly = true;
-      pelm.value = "";
-      pelm.readOnly = true;
-      qelm.value = "";
-      qelm.readOnly = true;
-      return val2;
-    }
-    throw new Error("no tuning method selected");
-  }
-  Array.from(document.getElementsByName("tuning")).forEach((input) => {
-    input.addEventListener("change", changeTuningMethod);
-  });
-  getInputElement("baseFreq").addEventListener("input", readVal);
-  getInputElement("PVal").addEventListener("input", readVal);
-  getInputElement("QVal").addEventListener("input", readVal);
-  getInputElement("SVal").addEventListener("input", readVal);
-  getInputElement("pVal").addEventListener("input", readVal);
-  getInputElement("qVal").addEventListener("input", readVal);
-
   // src/note.ts
   function addOctave(Note2, n) {
     const monzo = {
@@ -164,8 +33,6 @@
       n: Note2.monzo.n
     };
     return {
-      val: Note2.val,
-      frequency: getFrequency(monzo, Note2.val),
       name: Note2.name,
       oct: Note2.oct + n,
       monzo
@@ -175,30 +42,31 @@
     if (Note2.name.endsWith("\u266F")) {
       throw new Error("Cannot add flat to a sharp note");
     }
+    const monzo = {
+      m: Note2.monzo.m + n * 11,
+      n: Note2.monzo.n - n * 7
+    };
     return {
       name: Note2.name + "\u266D".repeat(n),
       oct: Note2.oct,
-      monzo: {
-        m: Note2.monzo.m + n * 11,
-        n: Note2.monzo.n - n * 7
-      }
+      monzo
     };
   }
   function addSharp(Note2, n) {
     if (Note2.name.endsWith("\u266D")) {
       throw new Error("Cannot add sharp to a flat note");
     }
+    const monzo = {
+      m: Note2.monzo.m - n * 11,
+      n: Note2.monzo.n + n * 7
+    };
     return {
       name: Note2.name + "\u266F".repeat(n),
       oct: Note2.oct,
-      monzo: {
-        m: Note2.monzo.m - n * 11,
-        n: Note2.monzo.n + n * 7
-      }
+      monzo
     };
   }
-  function generateNotes(baseNoteName = "A4", minOct = 2, maxOct = 6, flatNum = 1, sharpNum = 1) {
-    const names = ["C", "D", "E", "F", "G", "A", "B"];
+  function generateNotes(val2, baseNoteName = "A4", minOct = 2, maxOct = 6, flatNum = 1, sharpNum = 1) {
     const diatonic = [
       { name: "C", oct: 0, monzo: { m: 0, n: 0 } },
       // 0
@@ -237,20 +105,219 @@
     if (!baseNote) {
       throw new Error(`Base note ${baseNoteName} not found`);
     }
-    return notes2.sort((a, b) => {
-      const aVal = Math.pow(2, a.monzo.m) * Math.pow(3, a.monzo.n);
-      const bVal = Math.pow(2, b.monzo.m) * Math.pow(3, b.monzo.n);
-      return aVal - bVal;
-    }).map((note) => {
-      return {
-        ...note,
-        monzo: {
-          m: note.monzo.m - baseNote.monzo.m,
-          n: note.monzo.n - baseNote.monzo.n
-        }
+    return notes2.map((note) => {
+      const monzo = {
+        m: note.monzo.m - baseNote.monzo.m,
+        n: note.monzo.n - baseNote.monzo.n
       };
-    });
+      return {
+        name: note.name,
+        oct: note.oct,
+        monzo,
+        val: val2,
+        frequency: getFrequency(val2, monzo),
+        steps: getSteps(val2, monzo)
+      };
+    }).sort((a, b) => a.frequency - b.frequency);
   }
+
+  // src/gui.ts
+  var settings = {
+    val: makeVal_fromP(12, 19, 2, 440),
+    notes: [],
+    matrix: { a: 1, b: -2, c: 2, d: -3 },
+    scale: 100
+  };
+  function initializeGUI() {
+    changeTuningMethod();
+    updateNotes();
+    updateScale();
+  }
+  initializeGUI();
+  function getInputElement(id) {
+    return document.getElementById(id);
+  }
+  function changeTuningMethod() {
+    console.log("changeTuningMethod called");
+    const Pelm = getInputElement("PVal");
+    const Qelm = getInputElement("QVal");
+    const Selm = getInputElement("SVal");
+    const pelm = getInputElement("pVal");
+    const qelm = getInputElement("qVal");
+    if (getInputElement("fromP").checked) {
+      Pelm.readOnly = false;
+      Qelm.readOnly = true;
+      Selm.readOnly = true;
+      pelm.readOnly = false;
+      qelm.readOnly = false;
+      Pelm.value = "2";
+      if (pelm.value === "" || qelm.value === "") {
+        pelm.value = "12";
+        qelm.value = "19";
+      }
+      updateVal();
+      return;
+    }
+    if (getInputElement("fromQ").checked) {
+      Pelm.readOnly = true;
+      Qelm.readOnly = false;
+      Selm.readOnly = true;
+      pelm.readOnly = false;
+      qelm.readOnly = false;
+      Qelm.value = "3";
+      if (pelm.value === "" || qelm.value === "") {
+        pelm.value = "12";
+        qelm.value = "19";
+      }
+      updateVal();
+      return;
+    }
+    if (getInputElement("fromS").checked) {
+      Pelm.readOnly = true;
+      Qelm.readOnly = true;
+      Selm.readOnly = false;
+      pelm.readOnly = false;
+      qelm.readOnly = false;
+      Selm.value = "1.0594630943592953";
+      if (pelm.value === "" || qelm.value === "") {
+        pelm.value = "12";
+        qelm.value = "19";
+      }
+      updateVal();
+      return;
+    }
+    if (getInputElement("justIntonation").checked) {
+      Pelm.readOnly = false;
+      Qelm.readOnly = false;
+      Selm.readOnly = true;
+      pelm.readOnly = true;
+      qelm.readOnly = true;
+      Pelm.value = "2";
+      Qelm.value = "3";
+      updateVal();
+      return;
+    }
+    throw new Error("no tuning method selected");
+  }
+  function updateVal() {
+    const baseFreq = parseFloat(getInputElement("baseFreq").value);
+    const Pelm = getInputElement("PVal");
+    const Qelm = getInputElement("QVal");
+    const Selm = getInputElement("SVal");
+    const pelm = getInputElement("pVal");
+    const qelm = getInputElement("qVal");
+    const pVal = parseFloat(pelm.value);
+    const qVal = parseFloat(qelm.value);
+    const PVal = parseFloat(Pelm.value);
+    const QVal = parseFloat(Qelm.value);
+    const SVal = parseFloat(Selm.value);
+    if (getInputElement("justIntonation").checked) {
+      if (isNaN(baseFreq) || isNaN(PVal) || isNaN(QVal)) {
+        console.warn("Invalid input: ", { baseFreq, PVal, QVal });
+        return;
+      }
+      const val2 = makeVal_justIntonation(PVal, QVal, baseFreq);
+      Selm.value = "";
+      Selm.readOnly = true;
+      pelm.value = "";
+      pelm.readOnly = true;
+      qelm.value = "";
+      qelm.readOnly = true;
+      settings.val = val2;
+      updateNotes();
+      return;
+    }
+    if (getInputElement("fromP").checked) {
+      if (isNaN(baseFreq) || isNaN(pVal) || isNaN(qVal) || isNaN(PVal)) {
+        console.warn("Invalid input: ", { baseFreq, pVal, qVal, PVal });
+        return;
+      }
+      const val2 = makeVal_fromP(pVal, qVal, PVal, baseFreq);
+      Qelm.value = val2.Q.toString();
+      Qelm.readOnly = true;
+      Selm.value = val2.S.toString();
+      Selm.readOnly = true;
+      settings.val = val2;
+      updateNotes();
+      return;
+    }
+    if (getInputElement("fromQ").checked) {
+      if (isNaN(baseFreq) || isNaN(pVal) || isNaN(qVal) || isNaN(QVal)) {
+        console.warn("Invalid input: ", { baseFreq, pVal, qVal, QVal });
+        return;
+      }
+      const val2 = makeVal_fromQ(pVal, qVal, QVal, baseFreq);
+      Pelm.value = val2.P.toString();
+      Pelm.readOnly = true;
+      Selm.value = val2.S.toString();
+      Selm.readOnly = true;
+      settings.val = val2;
+      updateNotes();
+      return;
+    }
+    if (getInputElement("fromS").checked) {
+      if (isNaN(baseFreq) || isNaN(pVal) || isNaN(qVal) || isNaN(SVal)) {
+        console.warn("Invalid input: ", { baseFreq, pVal, qVal, SVal });
+        return;
+      }
+      const val2 = makeVal_fromS(pVal, qVal, SVal, baseFreq);
+      Pelm.value = val2.P.toString();
+      Pelm.readOnly = true;
+      Qelm.value = val2.Q.toString();
+      Qelm.readOnly = true;
+      settings.val = val2;
+      updateNotes();
+      return;
+    }
+    throw new Error("no tuning method selected");
+  }
+  function updateNotes() {
+    const baseNoteName = getInputElement("baseNote").value;
+    const minOct = parseInt(getInputElement("minOct").value);
+    const maxOct = parseInt(getInputElement("maxOct").value);
+    const flatNum = parseInt(getInputElement("flatNum").value);
+    const sharpNum = parseInt(getInputElement("sharpNum").value);
+    if (isNaN(minOct) || isNaN(maxOct) || isNaN(flatNum) || isNaN(sharpNum)) {
+      console.warn("Invalid input for notes: ", { minOct, maxOct, flatNum, sharpNum });
+      return;
+    }
+    try {
+      settings.notes = generateNotes(settings.val, baseNoteName, minOct, maxOct, flatNum, sharpNum);
+    } catch (error) {
+      console.error("Error generating notes:", error);
+    }
+  }
+  function updateScale() {
+    const scaleInput = getInputElement("scale");
+    const scale2 = parseFloat(scaleInput.value);
+    if (isNaN(scale2)) {
+      console.warn("Invalid input for scale: ", scale2);
+      return;
+    }
+    settings.scale = scale2;
+  }
+  Array.from(document.getElementsByName("tuning")).forEach((input) => {
+    input.addEventListener("change", changeTuningMethod);
+  });
+  getInputElement("baseFreq").addEventListener("input", updateVal);
+  getInputElement("PVal").addEventListener("input", updateVal);
+  getInputElement("QVal").addEventListener("input", updateVal);
+  getInputElement("SVal").addEventListener("input", updateVal);
+  getInputElement("pVal").addEventListener("input", updateVal);
+  getInputElement("qVal").addEventListener("input", updateVal);
+  getInputElement("baseNote").addEventListener("input", updateNotes);
+  getInputElement("minOct").addEventListener("input", updateNotes);
+  getInputElement("maxOct").addEventListener("input", updateNotes);
+  getInputElement("flatNum").addEventListener("input", updateNotes);
+  getInputElement("sharpNum").addEventListener("input", updateNotes);
+  getInputElement("scale").addEventListener("input", updateScale);
+  Array.from(document.getElementsByTagName("input")).forEach((input) => {
+    if (input.inputMode === "numeric") {
+      input.addEventListener("input", () => {
+        input.value = input.value.replace(/[^0-9]/g, "");
+      });
+    }
+  });
 
   // src/matrix.ts
   function scaleMatrix(matrix2, scale2) {
@@ -339,8 +406,8 @@
   function isPlaying(note) {
     return playingNote === note;
   }
-  function playNote(note, val2) {
-    const frequency = getFrequency(note.monzo, val2);
+  function playNote(note) {
+    const frequency = note.frequency;
     oscillator = audioCtx.createOscillator();
     oscillator.type = "sine";
     oscillator.frequency.setValueAtTime(frequency, audioCtx.currentTime);
@@ -356,13 +423,13 @@
     }
     playingNote = null;
   }
-  function onMouseDown(p52, notes2, matrix2, val2) {
+  function onMouseDown(p52, notes2, matrix2) {
     const note = getClickedNote(p52, notes2, matrix2);
     if (note) {
-      playNote(note, val2);
+      playNote(note);
     }
   }
-  function onMouseMoved(p52, notes2, matrix2, val2) {
+  function onMouseMoved(p52, notes2, matrix2) {
   }
   function onMouseUp(p52) {
     stopNote();
@@ -380,12 +447,12 @@
   function fmod(a, b) {
     return a - b * Math.floor(a / b);
   }
-  function noteToHue(note, val2) {
-    return fmod(note.monzo.n * Math.log(val2.Q) / Math.log(val2.P) * 360 + 20, 360);
+  function noteToHue(note) {
+    return fmod(note.monzo.n * Math.log(note.val.Q) / Math.log(note.val.P) * 360 + 20, 360);
   }
-  function drawNote(p52, note, matrix2, val2) {
+  function drawNote(p52, note, matrix2) {
     p52.push();
-    const hue = noteToHue(note, val2);
+    const hue = noteToHue(note);
     const pos = noteToPos(note, matrix2);
     if (isPlaying(note)) {
       p52.fill(oklch(p52, 0.6, 0.2, hue));
@@ -402,12 +469,12 @@
     p52.textSize(25);
     p52.text(`${note.name}${note.oct}`, pos.x, pos.y - 15);
     p52.textSize(15);
-    if (val2.p !== null && val2.q !== null) {
-      p52.text(`\uFF3B${note.monzo.m} ${note.monzo.n}\u3009= ${getSteps(val2, note.monzo)} 
- ${getFrequency(note.monzo, val2).toFixed(1)}Hz`, pos.x, pos.y + 20);
+    if (note.steps !== null) {
+      p52.text(`\uFF3B${note.monzo.m} ${note.monzo.n}\u3009= ${note.steps} 
+ ${note.frequency.toFixed(1)}Hz`, pos.x, pos.y + 20);
     } else {
       p52.text(`\uFF3B${note.monzo.m} ${note.monzo.n}\u3009 
- ${getFrequency(note.monzo, val2).toFixed(1)}Hz`, pos.x, pos.y + 20);
+ ${note.frequency.toFixed(1)}Hz`, pos.x, pos.y + 20);
     }
     p52.pop();
   }
@@ -436,10 +503,10 @@
   }
 
   // src/main.ts
-  for (const note of notes) {
-    const steps = getSteps(val, note.monzo);
-    console.log(note, steps);
-  }
+  var val;
+  var notes;
+  var matrix;
+  var scale;
   var sketch = (p) => {
     p.setup = () => {
       p.createCanvas(p.windowWidth, p.windowHeight);
@@ -448,23 +515,23 @@
       p.resizeCanvas(p.windowWidth, p.windowHeight);
     };
     p.draw = () => {
-      const val2 = makeVal_fromP(17, 27, 2, 440);
-      const notes2 = generateNotes(val2, "A4", 1, 7, 3, 3);
-      const matrix2 = { a: 1, b: -2, c: 2, d: -3 };
-      const scale2 = 100;
+      val = settings.val;
+      notes = settings.notes;
+      matrix = settings.matrix;
+      scale = settings.scale;
       p.background(30);
       p.translate(p.width / 2, p.height / 2);
-      drawOctaveGrid(p, val2, scaleMatrix(matrix2, scale2));
-      drawOctaveGrid(p, makeVal_justIntonation(2, 3, 440), scaleMatrix(matrix2, scale2), 100);
-      notes2.forEach((note) => {
-        drawNote(p, note, scaleMatrix(matrix2, scale2), val2);
+      drawOctaveGrid(p, val, scaleMatrix(matrix, scale));
+      drawOctaveGrid(p, makeVal_justIntonation(2, 3, 440), scaleMatrix(matrix, scale), 100);
+      notes.forEach((note) => {
+        drawNote(p, note, scaleMatrix(matrix, scale));
       });
     };
     p.mousePressed = () => {
-      onMouseDown(p, notes, scaleMatrix(matrix, scale), val);
+      onMouseDown(p, notes, scaleMatrix(matrix, scale));
     };
     p.mouseMoved = () => {
-      onMouseMoved(p, notes, scaleMatrix(matrix, scale), val);
+      onMouseMoved(p, notes, scaleMatrix(matrix, scale));
     };
     p.mouseReleased = () => {
       onMouseUp(p);

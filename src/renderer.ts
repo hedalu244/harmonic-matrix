@@ -20,13 +20,13 @@ function fmod(a: number, b: number): number {
     return a - b * Math.floor(a / b);
 }
 
-function noteToHue(note: Note, val: Val): number {
-    return fmod((note.monzo.n * Math.log(val.Q) / Math.log(val.P)) * 360 + 20, 360);
+function noteToHue(note: Note): number {
+    return fmod((note.monzo.n * Math.log(note.val.Q) / Math.log(note.val.P)) * 360 + 20, 360);
 }
 
-export function drawNote(p5: p5_, note: Note, matrix: Matrix, val: Val) {
+export function drawNote(p5: p5_, note: Note, matrix: Matrix) {
     p5.push();
-    const hue = noteToHue(note, val);
+    const hue = noteToHue(note);
     const pos = noteToPos(note, matrix);
 
     if (isPlaying(note)) {
@@ -48,11 +48,11 @@ export function drawNote(p5: p5_, note: Note, matrix: Matrix, val: Val) {
     p5.text(`${note.name}${note.oct}`, pos.x, pos.y - 15);
     
     p5.textSize(15);
-    if (val.p !== null && val.q !== null) {
-        p5.text(`［${note.monzo.m} ${note.monzo.n}〉= ${getSteps(val, note.monzo)} \n ${getFrequency(note.monzo, val).toFixed(1)}Hz`, pos.x, pos.y + 20);
+    if (note.steps !== null) {
+        p5.text(`［${note.monzo.m} ${note.monzo.n}〉= ${note.steps} \n ${note.frequency.toFixed(1)}Hz`, pos.x, pos.y + 20);
     }
     else {
-        p5.text(`［${note.monzo.m} ${note.monzo.n}〉 \n ${getFrequency(note.monzo, val).toFixed(1)}Hz`, pos.x, pos.y + 20);
+        p5.text(`［${note.monzo.m} ${note.monzo.n}〉 \n ${note.frequency.toFixed(1)}Hz`, pos.x, pos.y + 20);
     }
     p5.pop();
 }
