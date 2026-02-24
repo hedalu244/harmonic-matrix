@@ -234,8 +234,8 @@
         chromatic.push(addSharp(note, i));
       }
     }
-    const minOct = Math.min(parseInt(baseMatch[2]), parseInt(minMatch[2]), parseInt(maxMatch[2]));
-    const maxOct = Math.max(parseInt(baseMatch[2]), parseInt(minMatch[2]), parseInt(maxMatch[2]));
+    const minOct = Math.min(parseInt(baseMatch[2]), parseInt(minMatch[2]), parseInt(maxMatch[2])) - 1;
+    const maxOct = Math.max(parseInt(baseMatch[2]), parseInt(minMatch[2]), parseInt(maxMatch[2])) + 1;
     const temporalNotes = [];
     for (let oct = minOct; oct <= maxOct; oct++) {
       for (const note of chromatic) {

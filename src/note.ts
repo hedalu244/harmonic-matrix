@@ -92,8 +92,8 @@ export function generateNotes(val: Val, baseNoteName = "A4", minNoteName = "A0",
         }
     }
 
-    const minOct = Math.min(parseInt(baseMatch[2]), parseInt(minMatch[2]), parseInt(maxMatch[2]));
-    const maxOct = Math.max(parseInt(baseMatch[2]), parseInt(minMatch[2]), parseInt(maxMatch[2]));
+    const minOct = Math.min(parseInt(baseMatch[2]), parseInt(minMatch[2]), parseInt(maxMatch[2])) - 1; //フラットが増えた時のために多めに
+    const maxOct = Math.max(parseInt(baseMatch[2]), parseInt(minMatch[2]), parseInt(maxMatch[2])) + 1;
 
     const temporalNotes: TemporalNote[] = [];
     for (let oct = minOct; oct <= maxOct; oct++) {
