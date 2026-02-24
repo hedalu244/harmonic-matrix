@@ -269,11 +269,7 @@ function updateMatrix() {
     }
 
     const transform = multiplyMatrix(m2, m1Inv);
-    if (getInputElement("matrixNormalize").checked) {
-        settings.matrix = normalizeMatrix(transform);
-    } else {
-        settings.matrix = transform;
-    }
+    settings.matrix = transform;
 
     settings.scaledMatrix.setTarget(scaleMatrix(settings.matrix, settings.gap * settings.scale / 100));
 }
@@ -336,7 +332,6 @@ getInputElement("matrix2A").addEventListener("input", updateMatrix);
 getInputElement("matrix2B").addEventListener("input", updateMatrix);
 getInputElement("matrix2C").addEventListener("input", updateMatrix);
 getInputElement("matrix2D").addEventListener("input", updateMatrix);
-getInputElement("matrixNormalize").addEventListener("change", updateMatrix);
 
 getInputElement("scale").addEventListener("input", updateScale);
 getInputElement("gap").addEventListener("input", updateScale);

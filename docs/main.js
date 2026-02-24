@@ -65,14 +65,6 @@
       d: matrix.a * invDet
     };
   }
-  function normalizeMatrix(matrix) {
-    const det = determinant(matrix);
-    if (det === 0) {
-      return matrix;
-    }
-    const scale = 1 / Math.sqrt(Math.abs(det));
-    return scaleMatrix(matrix, scale);
-  }
 
   // src/oklch.ts
   function dot(a, b) {
@@ -615,11 +607,7 @@
       return;
     }
     const transform = multiplyMatrix(m2, m1Inv);
-    if (getInputElement("matrixNormalize").checked) {
-      settings.matrix = normalizeMatrix(transform);
-    } else {
-      settings.matrix = transform;
-    }
+    settings.matrix = transform;
     settings.scaledMatrix.setTarget(scaleMatrix(settings.matrix, settings.gap * settings.scale / 100));
   }
   function updateScale() {
@@ -673,7 +661,6 @@
   getInputElement("matrix2B").addEventListener("input", updateMatrix);
   getInputElement("matrix2C").addEventListener("input", updateMatrix);
   getInputElement("matrix2D").addEventListener("input", updateMatrix);
-  getInputElement("matrixNormalize").addEventListener("change", updateMatrix);
   getInputElement("scale").addEventListener("input", updateScale);
   getInputElement("gap").addEventListener("input", updateScale);
   getInputElement("showSteps").addEventListener("change", () => {
