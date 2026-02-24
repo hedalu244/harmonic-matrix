@@ -25,7 +25,7 @@ const sketch = (p: p5_) => {
         drawOctaveGrid(p, makeVal_justIntonation(2, 3, 440), settings.scaledMatrix, 100);
 
         settings.notes.forEach(note => {
-            drawNote(p, note, settings.scaledMatrix, settings.size);
+            drawNote(p, note, settings.scaledMatrix, settings.size, settings.showSteps);
         });
     };
     canvas.addEventListener("mousedown", () => {

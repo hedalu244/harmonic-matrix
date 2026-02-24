@@ -222,7 +222,7 @@
   function noteToHue(note) {
     return fmod(note.monzo.n * Math.log(note.val.Q) / Math.log(note.val.P) * 360 + 20, 360);
   }
-  function drawNote(p52, note, matrix, size) {
+  function drawNote(p52, note, matrix, size, showSteps) {
     p52.push();
     const hue = noteToHue(note);
     const pos = noteToPos(note, matrix);
@@ -241,7 +241,7 @@
     p52.textSize(size * 0.25);
     p52.text(`${note.name}${note.oct}`, pos.x, pos.y - size * 0.15);
     p52.textSize(size * 0.15);
-    if (note.steps !== null) {
+    if (note.steps !== null && showSteps) {
       p52.text(`\uFF3B${note.monzo.m} ${note.monzo.n}\u3009= ${note.steps} 
  ${note.frequency.toFixed(1)}Hz`, pos.x, pos.y + size * 0.2);
     } else {
@@ -387,7 +387,8 @@
     matrix: { a: 1, b: -2, c: 2, d: -3 },
     scaledMatrix: scaleMatrix({ a: 1, b: -2, c: 2, d: -3 }, 100),
     size: 100,
-    playMode: "hold"
+    playMode: "hold",
+    showSteps: false
   };
   function initializeGUI() {
     changeTuningMethod();
@@ -593,6 +594,9 @@
   getInputElement("playModeToggle").addEventListener("change", updatePlayMode);
   getInputElement("scale").addEventListener("input", updateScale);
   getInputElement("gap").addEventListener("input", updateScale);
+  getInputElement("showSteps").addEventListener("change", () => {
+    settings.showSteps = getInputElement("showSteps").checked;
+  });
   Array.from(document.getElementsByTagName("input")).forEach((input) => {
     if (input.inputMode === "numeric") {
       input.addEventListener("input", () => {
@@ -616,7 +620,7 @@
       drawOctaveGrid(p, settings.val, settings.scaledMatrix);
       drawOctaveGrid(p, makeVal_justIntonation(2, 3, 440), settings.scaledMatrix, 100);
       settings.notes.forEach((note) => {
-        drawNote(p, note, settings.scaledMatrix, settings.size);
+        drawNote(p, note, settings.scaledMatrix, settings.size, settings.showSteps);
       });
     };
     canvas.addEventListener("mousedown", () => {

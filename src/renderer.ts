@@ -22,7 +22,7 @@ function noteToHue(note: Note): number {
     return fmod((note.monzo.n * Math.log(note.val.Q) / Math.log(note.val.P)) * 360 + 20, 360);
 }
 
-export function drawNote(p5: p5_, note: Note, matrix: Matrix, size: number) {
+export function drawNote(p5: p5_, note: Note, matrix: Matrix, size: number, showSteps: boolean) {
     p5.push();
     const hue = noteToHue(note);
     const pos = noteToPos(note, matrix);
@@ -46,7 +46,7 @@ export function drawNote(p5: p5_, note: Note, matrix: Matrix, size: number) {
     p5.text(`${note.name}${note.oct}`, pos.x, pos.y - size * 0.15);
     
     p5.textSize(size * 0.15);
-    if (note.steps !== null) {
+    if (note.steps !== null && showSteps) {
         p5.text(`［${note.monzo.m} ${note.monzo.n}〉= ${note.steps} \n ${note.frequency.toFixed(1)}Hz`, pos.x, pos.y + size * 0.2);
     }
     else {

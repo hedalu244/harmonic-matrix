@@ -125,14 +125,13 @@
             </span>
             <span>シャープ</span>
         </div>
-
-        <h3>表示スケール</h3>
         <div style="display: grid; gap:5px 20px; grid-template-columns: auto auto;">
             <span style="text-align: right;">スケール</span><input type="range" id="scale" min="0" max="200" value="100"
                 style="width:200px;">
             <span style="text-align: right;">間隔</span><input type="range" id="gap" min="0" max="200" value="100"
                 style="width:200px;">
         </div>
+        <input type="checkbox" id="showSteps"> ステップ数を表示<br>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/p5/lib/p5.min.js"></script>
     <script src="./main.js"></script>

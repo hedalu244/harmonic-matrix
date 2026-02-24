@@ -11,6 +11,7 @@ interface GUISettings {
     size: number,
 
     playMode: "hold" | "toggle",
+    showSteps: boolean,
 }
 
 export const settings: GUISettings = {
@@ -20,6 +21,7 @@ export const settings: GUISettings = {
     scaledMatrix: scaleMatrix({ a: 1, b: -2, c: 2, d: -3 }, 100),
     size: 100,
     playMode: "hold",
+    showSteps: false,
 };
 
 function initializeGUI() {
@@ -252,6 +254,10 @@ getInputElement("playModeToggle").addEventListener("change", updatePlayMode);
 
 getInputElement("scale").addEventListener("input", updateScale);
 getInputElement("gap").addEventListener("input", updateScale);
+
+getInputElement("showSteps").addEventListener("change", () => {
+    settings.showSteps = getInputElement("showSteps").checked;
+});
 
 Array.from(document.getElementsByTagName("input")).forEach(input => {
     if (input.inputMode === "numeric") {
