@@ -268,7 +268,8 @@ function updateMatrix() {
         return;
     }
 
-    const transform = multiplyMatrix(m2, m1Inv);
+    // 上下鏡像反転
+    const transform = multiplyMatrix({ a: 1, b: 0, c: 0, d: -1 }, multiplyMatrix(m2, m1Inv));
     settings.matrix = transform;
 
     settings.scaledMatrix.setTarget(scaleMatrix(settings.matrix, settings.gap * settings.scale / 100));
@@ -408,9 +409,9 @@ function restoreSettingsFromURL() {
     getInputElement("matrix1C").value = params.get("C") || "-1";
     getInputElement("matrix1D").value = params.get("D") || "1";
     getInputElement("matrix2A").value = params.get("a") || "0";
-    getInputElement("matrix2B").value = params.get("b") || "-1";
+    getInputElement("matrix2B").value = params.get("b") || "1";
     getInputElement("matrix2C").value = params.get("c") || "1";
-    getInputElement("matrix2D").value = params.get("d") || "-1";
+    getInputElement("matrix2D").value = params.get("d") || "1";
     getInputElement("gap").value = params.get("gap") || "100";
     getInputElement("scale").value = params.get("scale") || "100";
     getInputElement("showSteps").checked = params.get("showSteps") === "1";
