@@ -37,6 +37,9 @@ initializeGUI();
 function getInputElement(id: string): HTMLInputElement {
     return document.getElementById(id) as HTMLInputElement;
 }
+function getButtonElement(id: string): HTMLButtonElement {
+    return document.getElementById(id) as HTMLButtonElement;
+}
 
 function changeTuningMethod() {
     console.log("changeTuningMethod called");
@@ -337,6 +340,18 @@ getInputElement("matrix2D").addEventListener("input", () => updateMatrixRight(fa
 getInputElement("scale").addEventListener("input", updateScale);
 getInputElement("gap").addEventListener("input", updateScale);
 
+getInputElement("showSteps").addEventListener("change", () => {
+    settings.showSteps = getInputElement("showSteps").checked;
+});
+
+getButtonElement("preset-WHiSq").addEventListener("click", () => {
+    setMatrixSettings(2, -1, -1, 1, 0, 1, 1, 1);
+});
+
+getButtonElement("preset-Hex").addEventListener("click", () => {
+    setMatrixSettings(2, -1, -1, 1, -0.5, 0.85, 0.5, 0.85);
+});
+
 function storeSettingsToURL() {
     const params = new URLSearchParams();
     params.set("baseNote", getInputElement("baseNote").value);
@@ -374,19 +389,17 @@ function storeSettingsToURL() {
     window.history.replaceState({}, "", `${window.location.pathname}?${params.toString()}`);
 }
 
-function restoreSettingsFromURL() {
-    const params = new URLSearchParams(window.location.search);
-    console.log(params.entries());
-    getInputElement("baseNote").value = params.get("baseNote") || "A4";
-    getInputElement("minNote").value = params.get("minNote") || "C2";
-    getInputElement("maxNote").value = params.get("maxNote") || "C7";
-    getInputElement("flatNum").value = params.get("flatNum") || "2";
-    getInputElement("sharpNum").value = params.get("sharpNum") || "2";
-    getInputElement("baseFreq").value = params.get("baseFreq") || "440";
-    const tuning = params.get("tuning") || "fromP";
+function setValSettings(baseNote: string, baseFreq: number, tuning: "fromP" | "fromQ" | "fromS" | "justIntonation", P: string | null, Q: string | null, S: string | null, p: string | null, q: string | null) {
+    getInputElement("baseNote").value = baseNote;
+    getInputElement("baseFreq").value = baseFreq.toString();
+    getInputElement("PVal").value = P !== null ? P : "";
+    getInputElement("QVal").value = Q !== null ? Q : "";
+    getInputElement("SVal").value = S !== null ? S : "";
+    getInputElement("pVal").value = p !== null ? p : "";
+    getInputElement("qVal").value = q !== null ? q : "";
+    
     if (tuning === "fromP") {
         getInputElement("fromP").checked = true;
-
     } else if (tuning === "fromQ") {
         getInputElement("fromQ").checked = true;
     } else if (tuning === "fromS") {
@@ -394,45 +407,90 @@ function restoreSettingsFromURL() {
     } else if (tuning === "justIntonation") {
         getInputElement("justIntonation").checked = true;
     }
-    getInputElement("PVal").value = params.get("P") || "2";
-    getInputElement("QVal").value = params.get("Q") || "3";
-    getInputElement("SVal").value = params.get("S") || "";
-    getInputElement("pVal").value = params.get("p") || "12";
-    getInputElement("qVal").value = params.get("q") || "19";
-    const playMode = params.get("playMode") || "hold";
-    if (playMode === "hold") {
-        getInputElement("playModeHold").checked = true;
-    } else if (playMode === "toggle") {
-        getInputElement("playModeToggle").checked = true;
-    }
-    getInputElement("matrix1A").value = params.get("A") || "2";
-    getInputElement("matrix1B").value = params.get("B") || "-1";
-    getInputElement("matrix1C").value = params.get("C") || "-1";
-    getInputElement("matrix1D").value = params.get("D") || "1";
-    getInputElement("matrix2A").value = params.get("a") || "0";
-    getInputElement("matrix2B").value = params.get("b") || "1";
-    getInputElement("matrix2C").value = params.get("c") || "1";
-    getInputElement("matrix2D").value = params.get("d") || "1";
-    getInputElement("gap").value = params.get("gap") || "100";
-    getInputElement("scale").value = params.get("scale") || "100";
-    getInputElement("showSteps").checked = params.get("showSteps") === "1";
-
     changeTuningMethod();
-    updateNotes();
-    updatePlayMode();
+    // updateVal();はchangeTuningMethod内で呼ばれるため不要
+    // updateNotes();もupdateVal内で呼ばれるため不要
+}
+
+function setMatrixSettings(A: number, B: number, C: number, D: number, a: number, b: number, c: number, d: number) {
+    getInputElement("matrix1A").value = A.toString();
+    getInputElement("matrix1B").value = B.toString();
+    getInputElement("matrix1C").value = C.toString();
+    getInputElement("matrix1D").value = D.toString();
+    getInputElement("matrix2A").value = a.toString();
+    getInputElement("matrix2B").value = b.toString();
+    getInputElement("matrix2C").value = c.toString();
+    getInputElement("matrix2D").value = d.toString();
     updateMatrixRight(true);
+}
+
+function setVisiblitySettings(minNote: string, maxNote: string, flatNum: string, sharpNum: string, scale: string, gap: string, showSteps: boolean) {
+    getInputElement("minNote").value = minNote;
+    getInputElement("maxNote").value = maxNote;
+    getInputElement("flatNum").value = flatNum;
+    getInputElement("sharpNum").value = sharpNum;
+    getInputElement("scale").value = scale;
+    getInputElement("gap").value = gap;
+    getInputElement("showSteps").checked = showSteps;
+    updateNotes();
     updateScale();
+}
+
+function setPlayModeSettings(playMode: "hold" | "toggle") {
+    if (playMode === "toggle") {
+        getInputElement("playModeHold").checked = false;
+        getInputElement("playModeToggle").checked = true;
+    } else {
+        getInputElement("playModeHold").checked = true;
+        getInputElement("playModeToggle").checked = false;
+    }
+    updatePlayMode();
+}
+
+function restoreSettingsFromURL() {
+    const params = new URLSearchParams(window.location.search);
+
+    setValSettings(
+        params.get("baseNote") || "A4",
+        parseFloat(params.get("baseFreq") || "440"),
+        params.get("tuning") as "fromP" | "fromQ" | "fromS" | "justIntonation",
+        params.get("P") || "2",
+        params.get("Q") || "3",
+        params.get("S") || "",
+        params.get("p") || "12",
+        params.get("q") || "19"
+    );
+    
+    setMatrixSettings(
+        parseFloat(params.get("A") || "2"),
+        parseFloat(params.get("B") || "-1"),
+        parseFloat(params.get("C") || "-1"),
+        parseFloat(params.get("D") || "1"),
+        parseFloat(params.get("a") || "0"),
+        parseFloat(params.get("b") || "1"),
+        parseFloat(params.get("c") || "1"),
+        parseFloat(params.get("d") || "1"),
+    );
+
+    setPlayModeSettings(
+        params.get("playMode") as "hold" | "toggle" || "hold"
+    );
+
+    setVisiblitySettings(
+        params.get("minNote") || "C2",
+        params.get("maxNote") || "C7",
+        params.get("flatNum") || "2",
+        params.get("sharpNum") || "2",
+        params.get("scale") || "100",
+        params.get("gap") || "100",
+        params.get("showSteps") === "1"
+    );
 }
 
 restoreSettingsFromURL();
 
 Array.from(document.getElementsByTagName("input")).forEach(input => {
     input.addEventListener("change", storeSettingsToURL);
-});
-
-
-getInputElement("showSteps").addEventListener("change", () => {
-    settings.showSteps = getInputElement("showSteps").checked;
 });
 
 Array.from(document.getElementsByTagName("input")).forEach(input => {

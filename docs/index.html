@@ -35,6 +35,14 @@
             background-color: #eee;
             color: #000;
         }
+        button {
+            font-size: 14px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            background-color: #eee;
+            color: #000;
+            padding: 5px 10px;
+        }
         h3 {
             margin: 10px 0 5px 0;
         }
@@ -111,6 +119,7 @@
         -->
 
         <h3>変形</h3>
+        <div style="text-align: center;">
             ［<input type="text" inputmode="numeric" class="integer" id="matrix1A" value="2" style="width:2em;">
             <input type="text" inputmode="numeric" class="integer" id="matrix1B" value="-1" style="width:2em;">〉 →
             (<input type="text" inputmode="numeric" class="decimal" id="matrix2A" value="0" style="width:2em;">
@@ -120,6 +129,11 @@
             (<input type="text" inputmode="numeric" class="decimal" id="matrix2C" value="1" style="width:2em;">
             <input type="text" inputmode="numeric" class="decimal" id="matrix2D" value="1" style="width:2em;">) <br>
             <!--            <input type="checkbox" id="matrixNormalize">行列式で正規化<br> -->
+        </div>
+        
+        <div style="text-align: center; margin-top: 10px;">
+        <button id="preset-WHiSq">WHiSq</button> <button id="preset-Hex">Hex</button>
+        </div>
 
         <h3>表示</h3>
         <div style="display: grid; gap:5px 20px; grid-template-columns: auto auto;">
