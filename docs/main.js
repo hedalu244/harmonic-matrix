@@ -680,20 +680,20 @@
     } else if (getInputElement("justIntonation").checked) {
       params.set("tuning", "justIntonation");
     }
-    params.set("PVal", getInputElement("P").value);
-    params.set("QVal", getInputElement("Q").value);
-    params.set("SVal", getInputElement("S").value);
-    params.set("pVal", getInputElement("p").value);
-    params.set("qVal", getInputElement("q").value);
+    params.set("P", getInputElement("PVal").value);
+    params.set("Q", getInputElement("QVal").value);
+    params.set("S", getInputElement("SVal").value);
+    params.set("p", getInputElement("pVal").value);
+    params.set("q", getInputElement("qVal").value);
     params.set("playMode", settings.playMode);
-    params.set("matrix1A", getInputElement("A").value);
-    params.set("matrix1B", getInputElement("B").value);
-    params.set("matrix1C", getInputElement("C").value);
-    params.set("matrix1D", getInputElement("D").value);
-    params.set("matrix2A", getInputElement("a").value);
-    params.set("matrix2B", getInputElement("b").value);
-    params.set("matrix2C", getInputElement("c").value);
-    params.set("matrix2D", getInputElement("d").value);
+    params.set("A", getInputElement("matrix1A").value);
+    params.set("B", getInputElement("matrix1B").value);
+    params.set("C", getInputElement("matrix1C").value);
+    params.set("D", getInputElement("matrix1D").value);
+    params.set("a", getInputElement("matrix2A").value);
+    params.set("b", getInputElement("matrix2B").value);
+    params.set("c", getInputElement("matrix2C").value);
+    params.set("d", getInputElement("matrix2D").value);
     params.set("gap", getInputElement("gap").value);
     params.set("scale", getInputElement("scale").value);
     params.set("showSteps", getInputElement("showSteps").checked ? "1" : "0");
@@ -701,6 +701,7 @@
   }
   function restoreSettingsFromURL() {
     const params = new URLSearchParams(window.location.search);
+    console.log(params.entries());
     getInputElement("baseNote").value = params.get("baseNote") || "A4";
     getInputElement("minNote").value = params.get("minNote") || "C2";
     getInputElement("maxNote").value = params.get("maxNote") || "C7";
