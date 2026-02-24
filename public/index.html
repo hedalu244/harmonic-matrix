@@ -83,16 +83,18 @@
             </span>
             <span></span>
             <span>
-                ln P ： ln Q ＝
+                log P ： log Q ＝
                 <input type="text" inputmode="numeric" id="pVal" value="12" style="width:2em;"> ：
                 <input type="text" inputmode="numeric" id="qVal" value="19" style="width:2em;">
             </span>
         </div>
+        <span style="font-size: small;"><input type="checkbox" id="autopq" checked> 自動で整数比を調整<br></span>
         <details>
             <summary>音律の説明</summary>
             各音階は、2を近似するPと3を近似するQをもとに、基準の周波数をP<sup>n</sup>×Q<sup>m</sup>倍することで作られます。<br>
             純正律の場合、PとQを直接指定します。この場合、step数は表示されません。<br>
             それ以外では、S = P<sup>1/p</sup>, Q = P<sup>1/q</sup>となるように、P,R,Sのうち1つを入力すると残り二つが定まります。<br>
+            「自動で整数比を調整」をオンにすると、log Pかlog Qの片方を入力したときにlog P：log Q≒log 2：log 3となるように、もう片方が自動的に変更されます。
         </details>
 
         <!--
@@ -110,7 +112,7 @@
         </div>
         -->
 
-        <h3>表示範囲</h3>
+        <h3>表示</h3>
         <div style="display: grid; gap:5px 20px; grid-template-columns: auto auto;">
             <span style="text-align: center; grid-area: 1 / 1 / 2 / 3;">
                 <input type="text" id="minNote" value="A1" style="width:2em;">　～　
@@ -126,9 +128,9 @@
             <span>シャープ</span>
         </div>
         <div style="display: grid; gap:5px 20px; grid-template-columns: auto auto;">
-            <span style="text-align: right;">スケール</span><input type="range" id="scale" min="0" max="200" value="100"
+            <span style="text-align: right;">スケール</span><input type="range" id="scale" min="40" max="200" value="100"
                 style="width:200px;">
-            <span style="text-align: right;">間隔</span><input type="range" id="gap" min="0" max="200" value="100"
+            <span style="text-align: right;">間隔</span><input type="range" id="gap" min="40" max="200" value="100"
                 style="width:200px;">
         </div>
         <input type="checkbox" id="showSteps"> ステップ数を表示<br>

@@ -479,8 +479,22 @@
   getInputElement("PVal").addEventListener("input", updateVal);
   getInputElement("QVal").addEventListener("input", updateVal);
   getInputElement("SVal").addEventListener("input", updateVal);
-  getInputElement("pVal").addEventListener("input", updateVal);
-  getInputElement("qVal").addEventListener("input", updateVal);
+  getInputElement("pVal").addEventListener("input", () => {
+    if (getInputElement("autopq").checked) {
+      const p = parseFloat(getInputElement("pVal").value);
+      const q = Math.round(p * Math.log(3) / Math.log(2));
+      getInputElement("qVal").value = q.toString();
+    }
+    updateVal();
+  });
+  getInputElement("qVal").addEventListener("input", () => {
+    if (getInputElement("autopq").checked) {
+      const q = parseFloat(getInputElement("qVal").value);
+      const p = Math.round(q * Math.log(2) / Math.log(3));
+      getInputElement("pVal").value = p.toString();
+    }
+    updateVal();
+  });
   getInputElement("baseNote").addEventListener("input", updateNotes);
   getInputElement("minNote").addEventListener("input", updateNotes);
   getInputElement("maxNote").addEventListener("input", updateNotes);
@@ -558,17 +572,29 @@
   }
   function drawOctaveGrid(p52, val, matrix, color = 200) {
     p52.push();
-    const incline = applyMatrix(matrix, { x: Math.log(val.Q), y: -Math.log(val.P) });
     const octave = applyMatrix(matrix, { x: 1, y: 0 });
+    const incline = applyMatrix(matrix, { x: Math.log(val.Q), y: -Math.log(val.P) });
     const scale = 100;
     const num = 5;
     p52.stroke(color);
-    p52.line(
-      -octave.x * scale,
-      -octave.y * scale,
-      octave.x * scale,
-      octave.y * scale
-    );
+    if (val.p !== null && val.q !== null) {
+      const incline2 = applyMatrix(matrix, { x: val.q, y: -val.p });
+      for (let i = -num; i <= num; i++) {
+        p52.line(
+          -octave.x * scale + incline2.x * i,
+          -octave.y * scale + incline2.y * i,
+          octave.x * scale + incline2.x * i,
+          octave.y * scale + incline2.y * i
+        );
+      }
+    } else {
+      p52.line(
+        -octave.x * scale,
+        -octave.y * scale,
+        octave.x * scale,
+        octave.y * scale
+      );
+    }
     for (let i = -num; i <= num; i++) {
       p52.line(
         -incline.x * scale + octave.x * i,

@@ -117,7 +117,7 @@ function updateVal(): void {
             console.warn("Invalid input: ", { baseFreq, PVal, QVal });
             return;
         }
-        
+
         const val = makeVal_justIntonation(PVal, QVal, baseFreq);
         Selm.value = "";
         Selm.readOnly = true;
@@ -236,12 +236,31 @@ Array.from(document.getElementsByName("tuning")).forEach(input => {
     input.addEventListener("change", changeTuningMethod);
 });
 
+function autoAppox_fromP() {
+}
+function autoAppox_fromQ() {
+}
+
 getInputElement("baseFreq").addEventListener("input", updateVal);
 getInputElement("PVal").addEventListener("input", updateVal);
 getInputElement("QVal").addEventListener("input", updateVal);
 getInputElement("SVal").addEventListener("input", updateVal);
-getInputElement("pVal").addEventListener("input", updateVal);
-getInputElement("qVal").addEventListener("input", updateVal);
+getInputElement("pVal").addEventListener("input", () => {
+    if (getInputElement("autopq").checked) {
+        const p = parseFloat(getInputElement("pVal").value);
+        const q = Math.round(p * Math.log(3) / Math.log(2));
+        getInputElement("qVal").value = q.toString();
+    }
+    updateVal();
+});
+getInputElement("qVal").addEventListener("input", () => {
+    if (getInputElement("autopq").checked) {
+        const q = parseFloat(getInputElement("qVal").value);
+        const p = Math.round(q * Math.log(2) / Math.log(3));
+        getInputElement("pVal").value = p.toString();
+    }
+    updateVal();
+});
 
 getInputElement("baseNote").addEventListener("input", updateNotes);
 getInputElement("minNote").addEventListener("input", updateNotes);

@@ -72,16 +72,24 @@ export function drawOctaveGrid(p5: p5_, val: Val, matrix: Matrix, color = 200) {
 
     // m 方向に ln Q、n 方向に -ln P を足すと周波数が P^m * Q^n = P^lnQ / Q^lnP = 1 倍になる、はず
 
-    const incline = applyMatrix(matrix, { x: Math.log(val.Q), y: -Math.log(val.P) });
     const octave = applyMatrix(matrix, { x: 1, y: 0 });
+    const incline = applyMatrix(matrix, { x: Math.log(val.Q), y: -Math.log(val.P) });
 
     const scale = 100; // グリッド線の長さの調整係数
     const num = 5; // グリッド線の数（正負両方に引くので、実際にはこれの倍）
 
 
     p5.stroke(color);
-    p5.line(-octave.x * scale, -octave.y * scale,
-        octave.x * scale, octave.y * scale);
+    if (val.p !== null && val.q !== null) {
+        const incline = applyMatrix(matrix, { x: val.q, y: -val.p });
+        for (let i = -num; i <= num; i++) {
+            p5.line(-octave.x * scale + incline.x * i, -octave.y * scale + incline.y * i,
+                octave.x * scale + incline.x * i, octave.y * scale + incline.y * i);
+        }
+    } else {
+        p5.line(-octave.x * scale, -octave.y * scale,
+            octave.x * scale, octave.y * scale);
+    }
 
     for (let i = -num; i <= num; i++) {
         p5.line(-incline.x * scale + octave.x * i, -incline.y * scale + octave.y * i,
