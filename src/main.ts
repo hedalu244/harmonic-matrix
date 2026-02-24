@@ -10,9 +10,10 @@ import { Matrix, scaleMatrix } from "./matrix";
 import { onMouseDown, onMouseMoved, onMouseUp } from "./player";
 import { settings } from "./gui";
 
+const canvas = document.getElementById("canvas") as HTMLCanvasElement;
 const sketch = (p: p5_) => {
     p.setup = () => {
-        p.createCanvas(p.windowWidth, p.windowHeight);
+        p.createCanvas(p.windowWidth, p.windowHeight, canvas);
     };
     p.windowResized = () => {
         p.resizeCanvas(p.windowWidth, p.windowHeight);
@@ -27,16 +28,14 @@ const sketch = (p: p5_) => {
             drawNote(p, note, settings.scaledMatrix, settings.size);
         });
     };
-
-    p.mousePressed = () => {
+    canvas.addEventListener("mousedown", () => {
         onMouseDown(p, settings.notes, settings.scaledMatrix);
-    }
-    p.mouseMoved = () => {
+    });
+    canvas.addEventListener("mousemove", () => {
         onMouseMoved(p, settings.notes, settings.scaledMatrix);
-    }
-    p.mouseReleased = () => {
+    });
+    canvas.addEventListener("mouseup", () => {
         onMouseUp(p);
-    }
+    });
 };
-
 new p5(sketch);

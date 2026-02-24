@@ -529,9 +529,10 @@
   }
 
   // src/main.ts
+  var canvas = document.getElementById("canvas");
   var sketch = (p) => {
     p.setup = () => {
-      p.createCanvas(p.windowWidth, p.windowHeight);
+      p.createCanvas(p.windowWidth, p.windowHeight, canvas);
     };
     p.windowResized = () => {
       p.resizeCanvas(p.windowWidth, p.windowHeight);
@@ -545,15 +546,15 @@
         drawNote(p, note, settings.scaledMatrix, settings.size);
       });
     };
-    p.mousePressed = () => {
+    canvas.addEventListener("mousedown", () => {
       onMouseDown(p, settings.notes, settings.scaledMatrix);
-    };
-    p.mouseMoved = () => {
+    });
+    canvas.addEventListener("mousemove", () => {
       onMouseMoved(p, settings.notes, settings.scaledMatrix);
-    };
-    p.mouseReleased = () => {
+    });
+    canvas.addEventListener("mouseup", () => {
       onMouseUp(p);
-    };
+    });
   };
   new p5(sketch);
 })();
