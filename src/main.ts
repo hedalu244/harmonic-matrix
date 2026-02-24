@@ -19,7 +19,7 @@ const sketch = (p: p5_) => {
         p.resizeCanvas(p.windowWidth, p.windowHeight);
     }
     p.draw = () => {
-        p.background(30);
+        p.background(15);
         p.translate(p.width / 2, p.height / 2);
         drawOctaveGrid(p, settings.val, settings.scaledMatrix);
         drawOctaveGrid(p, makeVal_justIntonation(2, 3, 440), settings.scaledMatrix, 100);

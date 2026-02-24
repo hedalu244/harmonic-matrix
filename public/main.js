@@ -229,9 +229,9 @@
     if (isPlaying(note)) {
       p52.fill(oklch(p52, 0.6, 0.2, hue));
       p52.stroke(oklch(p52, 0.8, 0.2, hue));
-      p52.circle(pos.x, pos.y, size * 0.7);
+      p52.circle(pos.x, pos.y, size * 0.8);
     } else {
-      p52.fill(oklch(p52, 0.4, 0.2, hue));
+      p52.fill(oklch(p52, 0.3, 0.2, hue));
       p52.stroke(oklch(p52, 0.8, 0.2, hue));
       p52.circle(pos.x, pos.y, size * 0.6);
     }
@@ -595,7 +595,7 @@
       p.resizeCanvas(p.windowWidth, p.windowHeight);
     };
     p.draw = () => {
-      p.background(30);
+      p.background(15);
       p.translate(p.width / 2, p.height / 2);
       drawOctaveGrid(p, settings.val, settings.scaledMatrix);
       drawOctaveGrid(p, makeVal_justIntonation(2, 3, 440), settings.scaledMatrix, 100);

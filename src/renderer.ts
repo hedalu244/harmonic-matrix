@@ -30,10 +30,10 @@ export function drawNote(p5: p5_, note: Note, matrix: Matrix, size: number) {
     if (isPlaying(note)) {
         p5.fill(oklch(p5, 0.6, 0.2, hue));
         p5.stroke(oklch(p5, 0.8, 0.2, hue));
-        p5.circle(pos.x, pos.y, size * 0.7);
+        p5.circle(pos.x, pos.y, size * 0.8);
     }
     else {
-        p5.fill(oklch(p5, 0.4, 0.2, hue));
+        p5.fill(oklch(p5, 0.3, 0.2, hue));
         p5.stroke(oklch(p5, 0.8, 0.2, hue));
         p5.circle(pos.x, pos.y, size * 0.6);
     }
