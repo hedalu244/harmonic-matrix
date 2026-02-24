@@ -663,6 +663,92 @@
   getInputElement("matrix2D").addEventListener("input", updateMatrix);
   getInputElement("scale").addEventListener("input", updateScale);
   getInputElement("gap").addEventListener("input", updateScale);
+  function storeSettingsToURL() {
+    const params = new URLSearchParams();
+    params.set("baseNote", getInputElement("baseNote").value);
+    params.set("minNote", getInputElement("minNote").value);
+    params.set("maxNote", getInputElement("maxNote").value);
+    params.set("flatNum", getInputElement("flatNum").value);
+    params.set("sharpNum", getInputElement("sharpNum").value);
+    params.set("baseFreq", getInputElement("baseFreq").value);
+    if (getInputElement("fromP").checked) {
+      params.set("tuning", "fromP");
+    } else if (getInputElement("fromQ").checked) {
+      params.set("tuning", "fromQ");
+    } else if (getInputElement("fromS").checked) {
+      params.set("tuning", "fromS");
+    } else if (getInputElement("justIntonation").checked) {
+      params.set("tuning", "justIntonation");
+    }
+    params.set("PVal", getInputElement("P").value);
+    params.set("QVal", getInputElement("Q").value);
+    params.set("SVal", getInputElement("S").value);
+    params.set("pVal", getInputElement("p").value);
+    params.set("qVal", getInputElement("q").value);
+    params.set("playMode", settings.playMode);
+    params.set("matrix1A", getInputElement("A").value);
+    params.set("matrix1B", getInputElement("B").value);
+    params.set("matrix1C", getInputElement("C").value);
+    params.set("matrix1D", getInputElement("D").value);
+    params.set("matrix2A", getInputElement("a").value);
+    params.set("matrix2B", getInputElement("b").value);
+    params.set("matrix2C", getInputElement("c").value);
+    params.set("matrix2D", getInputElement("d").value);
+    params.set("gap", getInputElement("gap").value);
+    params.set("scale", getInputElement("scale").value);
+    params.set("showSteps", getInputElement("showSteps").checked ? "1" : "0");
+    window.history.replaceState({}, "", `${window.location.pathname}?${params.toString()}`);
+  }
+  function restoreSettingsFromURL() {
+    const params = new URLSearchParams(window.location.search);
+    getInputElement("baseNote").value = params.get("baseNote") || "A4";
+    getInputElement("minNote").value = params.get("minNote") || "C2";
+    getInputElement("maxNote").value = params.get("maxNote") || "C7";
+    getInputElement("flatNum").value = params.get("flatNum") || "2";
+    getInputElement("sharpNum").value = params.get("sharpNum") || "2";
+    getInputElement("baseFreq").value = params.get("baseFreq") || "440";
+    const tuning = params.get("tuning") || "fromP";
+    if (tuning === "fromP") {
+      getInputElement("fromP").checked = true;
+    } else if (tuning === "fromQ") {
+      getInputElement("fromQ").checked = true;
+    } else if (tuning === "fromS") {
+      getInputElement("fromS").checked = true;
+    } else if (tuning === "justIntonation") {
+      getInputElement("justIntonation").checked = true;
+    }
+    getInputElement("PVal").value = params.get("P") || "2";
+    getInputElement("QVal").value = params.get("Q") || "3";
+    getInputElement("SVal").value = params.get("S") || "";
+    getInputElement("pVal").value = params.get("p") || "12";
+    getInputElement("qVal").value = params.get("q") || "19";
+    const playMode = params.get("playMode") || "hold";
+    if (playMode === "hold") {
+      getInputElement("playModeHold").checked = true;
+    } else if (playMode === "toggle") {
+      getInputElement("playModeToggle").checked = true;
+    }
+    getInputElement("matrix1A").value = params.get("A") || "2";
+    getInputElement("matrix1B").value = params.get("B") || "-1";
+    getInputElement("matrix1C").value = params.get("C") || "-1";
+    getInputElement("matrix1D").value = params.get("D") || "1";
+    getInputElement("matrix2A").value = params.get("a") || "0";
+    getInputElement("matrix2B").value = params.get("b") || "-1";
+    getInputElement("matrix2C").value = params.get("c") || "1";
+    getInputElement("matrix2D").value = params.get("d") || "-1";
+    getInputElement("gap").value = params.get("gap") || "100";
+    getInputElement("scale").value = params.get("scale") || "100";
+    getInputElement("showSteps").checked = params.get("showSteps") === "1";
+    changeTuningMethod();
+    updateNotes();
+    updatePlayMode();
+    updateMatrix();
+    updateScale();
+  }
+  restoreSettingsFromURL();
+  Array.from(document.getElementsByTagName("input")).forEach((input) => {
+    input.addEventListener("change", storeSettingsToURL);
+  });
   getInputElement("showSteps").addEventListener("change", () => {
     settings.showSteps = getInputElement("showSteps").checked;
   });
