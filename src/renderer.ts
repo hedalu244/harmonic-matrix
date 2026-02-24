@@ -1,6 +1,6 @@
 import type p5_ from "p5";
 import { getFrequency, getSteps, Monzo, Val } from "./monzo";
-import { Vector, Matrix, applyMatrix } from "./matrix";
+import { Vector, Matrix, applyMatrix, scaleMatrix } from "./matrix";
 import { Note } from "./note";
 import { oklch } from "./oklch";
 import { isPlaying } from "./player";
@@ -27,8 +27,9 @@ function noteToHue(note: Note): number {
 
 function drawNote(p5: p5_, note: Note) {
     p5.push();
+    const scaledMatrix = scaleMatrix(settings.animatedMatrix.getCurrent(), settings.gap * settings.scale);
     const hue = noteToHue(note);
-    const pos = noteToPos(note, settings.scaledMatrix.getCurrent());
+    const pos = noteToPos(note, scaledMatrix);
 
     if (isPlaying(note)) {
         p5.fill(oklch(p5, 0.6, 0.2, hue));

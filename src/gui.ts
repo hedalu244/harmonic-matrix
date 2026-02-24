@@ -8,7 +8,7 @@ interface GUISettings {
     val: Val,
     notes: Note[],
     matrix: Matrix,
-    scaledMatrix: EasingMatrix,
+    animatedMatrix: EasingMatrix,
     gap: number,
     scale: number,
 
@@ -20,8 +20,8 @@ export const settings: GUISettings = {
     val: makeVal_fromP(12, 19, 2, 440),
     notes: [],
     matrix: { a: 1, b: -2, c: 2, d: -3 },
-    scaledMatrix: new EasingMatrix(scaleMatrix({ a: 1, b: -2, c: 2, d: -3 }, 100)),
-    gap: 100,
+    animatedMatrix: new EasingMatrix({ a: 1, b: -2, c: 2, d: -3 }),
+    gap: 1,
     scale: 100,
     playMode: "hold",
     showSteps: false,
@@ -239,7 +239,7 @@ function updateMatrixLeft() {
     getInputElement("matrix2C").value = m2.c.toString();
     getInputElement("matrix2D").value = m2.d.toString();
 }
-function updateMatrix() {
+function updateMatrixRight(hardset: boolean) {
     const m1 = {
         a: parseFloat(getInputElement("matrix1A").value),
         b: parseFloat(getInputElement("matrix1B").value),
@@ -272,7 +272,8 @@ function updateMatrix() {
     const transform = multiplyMatrix({ a: 1, b: 0, c: 0, d: -1 }, multiplyMatrix(m2, m1Inv));
     settings.matrix = transform;
 
-    settings.scaledMatrix.setTarget(scaleMatrix(settings.matrix, settings.gap * settings.scale / 100));
+    if (hardset) settings.animatedMatrix.hardSetTarget(transform);
+    else settings.animatedMatrix.setTarget(settings.matrix);
 }
 
 function updateScale() {
@@ -286,9 +287,8 @@ function updateScale() {
         console.warn("Invalid input for gap or scale: ", { gap, scale });
         return;
     }
-    settings.gap = gap;
+    settings.gap = gap / 100;
     settings.scale = scale;
-    settings.scaledMatrix.hardSetTarget(scaleMatrix(settings.matrix, settings.gap * settings.scale / 100));
 }
 
 Array.from(document.getElementsByName("tuning")).forEach(input => {
@@ -329,10 +329,10 @@ getInputElement("matrix1A").addEventListener("input", updateMatrixLeft);
 getInputElement("matrix1B").addEventListener("input", updateMatrixLeft);
 getInputElement("matrix1C").addEventListener("input", updateMatrixLeft);
 getInputElement("matrix1D").addEventListener("input", updateMatrixLeft);
-getInputElement("matrix2A").addEventListener("input", updateMatrix);
-getInputElement("matrix2B").addEventListener("input", updateMatrix);
-getInputElement("matrix2C").addEventListener("input", updateMatrix);
-getInputElement("matrix2D").addEventListener("input", updateMatrix);
+getInputElement("matrix2A").addEventListener("input", () => updateMatrixRight(false));
+getInputElement("matrix2B").addEventListener("input", () => updateMatrixRight(false));
+getInputElement("matrix2C").addEventListener("input", () => updateMatrixRight(false));
+getInputElement("matrix2D").addEventListener("input", () => updateMatrixRight(false));
 
 getInputElement("scale").addEventListener("input", updateScale);
 getInputElement("gap").addEventListener("input", updateScale);
@@ -386,7 +386,7 @@ function restoreSettingsFromURL() {
     const tuning = params.get("tuning") || "fromP";
     if (tuning === "fromP") {
         getInputElement("fromP").checked = true;
-    
+
     } else if (tuning === "fromQ") {
         getInputElement("fromQ").checked = true;
     } else if (tuning === "fromS") {
@@ -420,7 +420,7 @@ function restoreSettingsFromURL() {
     changeTuningMethod();
     updateNotes();
     updatePlayMode();
-    updateMatrix();
+    updateMatrixRight(true);
     updateScale();
 }
 
