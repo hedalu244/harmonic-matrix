@@ -1,4 +1,5 @@
 import { Matrix, invertMatrix, multiplyMatrix, normalizeMatrix, scaleMatrix } from "./matrix";
+import { EasingMatrix } from "./easing";
 import { makeVal_justIntonation, makeVal_fromP, makeVal_fromQ, Val, makeVal_fromS } from "./monzo";
 import { generateNotes, Note } from "./note";
 import * as player from "./player";
@@ -7,7 +8,7 @@ interface GUISettings {
     val: Val,
     notes: Note[],
     matrix: Matrix,
-    scaledMatrix: Matrix,
+    scaledMatrix: EasingMatrix,
     gap: number,
     scale: number,
 
@@ -19,7 +20,7 @@ export const settings: GUISettings = {
     val: makeVal_fromP(12, 19, 2, 440),
     notes: [],
     matrix: { a: 1, b: -2, c: 2, d: -3 },
-    scaledMatrix: scaleMatrix({ a: 1, b: -2, c: 2, d: -3 }, 100),
+    scaledMatrix: new EasingMatrix(scaleMatrix({ a: 1, b: -2, c: 2, d: -3 }, 100)),
     gap: 100,
     scale: 100,
     playMode: "hold",
@@ -274,7 +275,7 @@ function updateMatrix() {
         settings.matrix = transform;
     }
 
-    settings.scaledMatrix = scaleMatrix(settings.matrix, settings.gap * settings.scale / 100);
+    settings.scaledMatrix.setTarget(scaleMatrix(settings.matrix, settings.gap * settings.scale / 100));
 }
 
 function updateScale() {
@@ -288,9 +289,9 @@ function updateScale() {
         console.warn("Invalid input for gap or scale: ", { gap, scale });
         return;
     }
-    settings.scaledMatrix = scaleMatrix(settings.matrix, gap * scale / 100);
     settings.gap = gap;
     settings.scale = scale;
+    settings.scaledMatrix.hardSetTarget(scaleMatrix(settings.matrix, settings.gap * settings.scale / 100));
 }
 
 Array.from(document.getElementsByName("tuning")).forEach(input => {

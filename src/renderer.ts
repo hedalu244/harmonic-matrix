@@ -28,7 +28,7 @@ function noteToHue(note: Note): number {
 function drawNote(p5: p5_, note: Note) {
     p5.push();
     const hue = noteToHue(note);
-    const pos = noteToPos(note, settings.scaledMatrix);
+    const pos = noteToPos(note, settings.scaledMatrix.getCurrent());
 
     if (isPlaying(note)) {
         p5.fill(oklch(p5, 0.6, 0.2, hue));

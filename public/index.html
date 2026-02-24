@@ -111,15 +111,15 @@
         -->
 
         <h3>変形</h3>
-            ［<input type="text" inputmode="numeric" class="decimal" id="matrix1A" value="2" style="width:2em;">
-            <input type="text" inputmode="numeric" class="decimal" id="matrix1B" value="-1" style="width:2em;">〉 →
-            (<input type="text" inputmode="numeric" class="decimal" id="matrix2A" value="-1" style="width:2em;">
-            <input type="text" inputmode="numeric" class="decimal" id="matrix2B" value="0" style="width:2em;">) <br>
-            ［<input type="text" inputmode="numeric" class="decimal" id="matrix1C" value="-1" style="width:2em;">
-            <input type="text" inputmode="numeric" class="decimal" id="matrix1D" value="1" style="width:2em;">〉 →
-            (<input type="text" inputmode="numeric" class="decimal" id="matrix2C" value="-1" style="width:2em;">
-            <input type="text" inputmode="numeric" class="decimal" id="matrix2D" value="1" style="width:2em;">) <br>
-            <input type="checkbox" id="matrixNormalize" checked>行列式で正規化<br>
+            ［<input type="text" inputmode="numeric" class="integer" id="matrix1A" value="2" style="width:2em;">
+            <input type="text" inputmode="numeric" class="integer" id="matrix1B" value="-1" style="width:2em;">〉 →
+            (<input type="text" inputmode="numeric" class="decimal" id="matrix2A" value="0" style="width:2em;">
+            <input type="text" inputmode="numeric" class="decimal" id="matrix2B" value="-1" style="width:2em;">) <br>
+            ［<input type="text" inputmode="numeric" class="integer" id="matrix1C" value="-1" style="width:2em;">
+            <input type="text" inputmode="numeric" class="integer" id="matrix1D" value="1" style="width:2em;">〉 →
+            (<input type="text" inputmode="numeric" class="decimal" id="matrix2C" value="1" style="width:2em;">
+            <input type="text" inputmode="numeric" class="decimal" id="matrix2D" value="-1" style="width:2em;">) <br>
+            <input type="checkbox" id="matrixNormalize">行列式で正規化<br>
 
         <h3>表示</h3>
         <div style="display: grid; gap:5px 20px; grid-template-columns: auto auto;">
@@ -128,11 +128,11 @@
                 <input type="text" id="maxNote" value="A7" style="width:2em;">
             </span>
             <span style="text-align: right;">
-                <input type="text" inputmode="numeric" class="integer" id="flatNum" value="3" style="width:2em;">
+                <input type="text" inputmode="numeric" class="integer" id="flatNum" value="2" style="width:2em;">
             </span>
             <span>フラット</span>
             <span style="text-align: right;">
-                <input type="text" inputmode="numeric" class="integer" id="sharpNum" value="3" style="width:2em;">
+                <input type="text" inputmode="numeric" class="integer" id="sharpNum" value="2" style="width:2em;">
             </span>
             <span>シャープ</span>
         </div>

@@ -5,6 +5,7 @@ import { makeVal_justIntonation, makeVal_fromP, Val } from "./monzo";
 import { drawOctaveGrid, drawNotes } from "./renderer";
 import * as mouseEvent from "./mouseEvent";
 import { settings } from "./gui";
+import { EasingNumber } from "./easing";
 
 const canvas = document.getElementById("canvas") as HTMLCanvasElement;
 const sketch = (p: p5_) => {
@@ -15,10 +16,11 @@ const sketch = (p: p5_) => {
         p.resizeCanvas(p.windowWidth, p.windowHeight);
     }
     p.draw = () => {
+        EasingNumber.updateTime();
         p.background(15);
         p.translate(p.width / 2, p.height / 2);
-        drawOctaveGrid(p, settings.val, settings.scaledMatrix);
-        drawOctaveGrid(p, makeVal_justIntonation(2, 3, 440), settings.scaledMatrix, 100);
+        drawOctaveGrid(p, settings.val, settings.scaledMatrix.getCurrent(), 100);
+        drawOctaveGrid(p, makeVal_justIntonation(2, 3, 440), settings.scaledMatrix.getCurrent(), 100);
 
         drawNotes(p);
     };
@@ -28,7 +30,7 @@ const sketch = (p: p5_) => {
     canvas.addEventListener("mousedown", (event) => {
         event.preventDefault();
         if (event.button === 0) // 左クリック
-            mouseEvent.mouseLeftPressed(p, settings.notes, settings.scaledMatrix);
+            mouseEvent.mouseLeftPressed(p, settings.notes, settings.scaledMatrix.getCurrent());
     });
     canvas.addEventListener("mouseup", (event) => {
         event.preventDefault();

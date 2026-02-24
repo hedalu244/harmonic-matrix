@@ -191,6 +191,84 @@
     updateMasterGain();
   }
 
+  // src/easing.ts
+  var EasingNumber = class _EasingNumber {
+    start;
+    timestamp;
+    target;
+    duration = 500;
+    // ms
+    constructor(x) {
+      this.start = x;
+      this.target = x;
+      this.timestamp = _EasingNumber.now;
+    }
+    static now = performance.now();
+    static updateTime() {
+      _EasingNumber.now = performance.now();
+    }
+    static easingFunction(t) {
+      if (t < 0) return 0;
+      if (t > 1) return 1;
+      return t * t * (3 - 2 * t);
+    }
+    setTarget(target) {
+      this.start = this.getCurrent();
+      this.target = target;
+      this.timestamp = _EasingNumber.now;
+    }
+    getCurrent() {
+      const elapsed = _EasingNumber.now - this.timestamp;
+      const t = Math.min(elapsed / this.duration, 1);
+      return this.start + (this.target - this.start) * _EasingNumber.easingFunction(t);
+    }
+    hardSetTarget(target) {
+      this.target = target;
+      this.timestamp = _EasingNumber.now - this.duration;
+    }
+  };
+  var EasingMatrix = class {
+    a;
+    b;
+    c;
+    d;
+    // メモ化キャッシュ
+    current;
+    lastUpdate;
+    constructor(matrix) {
+      this.a = new EasingNumber(matrix.a);
+      this.b = new EasingNumber(matrix.b);
+      this.c = new EasingNumber(matrix.c);
+      this.d = new EasingNumber(matrix.d);
+      this.current = matrix;
+      this.lastUpdate = EasingNumber.now;
+    }
+    setTarget(matrix) {
+      this.a.setTarget(matrix.a);
+      this.b.setTarget(matrix.b);
+      this.c.setTarget(matrix.c);
+      this.d.setTarget(matrix.d);
+    }
+    getCurrent() {
+      if (EasingNumber.now != this.lastUpdate) {
+        this.current = {
+          a: this.a.getCurrent(),
+          b: this.b.getCurrent(),
+          c: this.c.getCurrent(),
+          d: this.d.getCurrent()
+        };
+        this.lastUpdate = EasingNumber.now;
+      }
+      return this.current;
+    }
+    hardSetTarget(matrix) {
+      this.a.hardSetTarget(matrix.a);
+      this.b.hardSetTarget(matrix.b);
+      this.c.hardSetTarget(matrix.c);
+      this.d.hardSetTarget(matrix.d);
+    }
+  };
+
   // src/note.ts
   function addOctave(Note2, n) {
     const monzo = {
@@ -313,7 +391,7 @@
     val: makeVal_fromP(12, 19, 2, 440),
     notes: [],
     matrix: { a: 1, b: -2, c: 2, d: -3 },
-    scaledMatrix: scaleMatrix({ a: 1, b: -2, c: 2, d: -3 }, 100),
+    scaledMatrix: new EasingMatrix(scaleMatrix({ a: 1, b: -2, c: 2, d: -3 }, 100)),
     gap: 100,
     scale: 100,
     playMode: "hold",
@@ -542,7 +620,7 @@
     } else {
       settings.matrix = transform;
     }
-    settings.scaledMatrix = scaleMatrix(settings.matrix, settings.gap * settings.scale / 100);
+    settings.scaledMatrix.setTarget(scaleMatrix(settings.matrix, settings.gap * settings.scale / 100));
   }
   function updateScale() {
     const gapInput = getInputElement("gap");
@@ -553,9 +631,9 @@
       console.warn("Invalid input for gap or scale: ", { gap, scale });
       return;
     }
-    settings.scaledMatrix = scaleMatrix(settings.matrix, gap * scale / 100);
     settings.gap = gap;
     settings.scale = scale;
+    settings.scaledMatrix.hardSetTarget(scaleMatrix(settings.matrix, settings.gap * settings.scale / 100));
   }
   Array.from(document.getElementsByName("tuning")).forEach((input) => {
     input.addEventListener("change", changeTuningMethod);
@@ -631,7 +709,7 @@
   function drawNote(p52, note) {
     p52.push();
     const hue = noteToHue(note);
-    const pos = noteToPos(note, settings.scaledMatrix);
+    const pos = noteToPos(note, settings.scaledMatrix.getCurrent());
     if (isPlaying(note)) {
       p52.fill(oklch(p52, 0.6, 0.2, hue));
       p52.stroke(oklch(p52, 0.8, 0.2, hue));
@@ -753,10 +831,11 @@
       p.resizeCanvas(p.windowWidth, p.windowHeight);
     };
     p.draw = () => {
+      EasingNumber.updateTime();
       p.background(15);
       p.translate(p.width / 2, p.height / 2);
-      drawOctaveGrid(p, settings.val, settings.scaledMatrix);
-      drawOctaveGrid(p, makeVal_justIntonation(2, 3, 440), settings.scaledMatrix, 100);
+      drawOctaveGrid(p, settings.val, settings.scaledMatrix.getCurrent(), 100);
+      drawOctaveGrid(p, makeVal_justIntonation(2, 3, 440), settings.scaledMatrix.getCurrent(), 100);
       drawNotes(p);
     };
     canvas.addEventListener("contextmenu", (event) => {
@@ -765,7 +844,7 @@
     canvas.addEventListener("mousedown", (event) => {
       event.preventDefault();
       if (event.button === 0)
-        mouseLeftPressed(p, settings.notes, settings.scaledMatrix);
+        mouseLeftPressed(p, settings.notes, settings.scaledMatrix.getCurrent());
     });
     canvas.addEventListener("mouseup", (event) => {
       event.preventDefault();
