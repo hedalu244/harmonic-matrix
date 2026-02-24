@@ -3,6 +3,7 @@ import { getFrequency, Monzo, Val } from "./monzo";
 import { Vector, Matrix, applyMatrix } from "./matrix";
 import { Note } from "./note";
 import { noteToPos } from "./renderer";
+import { settings } from "./gui";
 
 export function getClickedNote(p5: p5_, notes: Note[], matrix: Matrix): Note | null {
     const nearest = { note: null as Note | null, dist: Infinity };
@@ -16,40 +17,86 @@ export function getClickedNote(p5: p5_, notes: Note[], matrix: Matrix): Note | n
         }
     }
     // const ans = nearest.dist <= size * 0.7 ? nearest.note : null;
-     const ans = nearest.note;
+    const ans = nearest.note;
     console.log(ans);
     return ans;
 }
 
 const audioCtx = new AudioContext();
-let oscillator: OscillatorNode | null = null;
-let playingNote = null as Note | null;
+const masterGain = audioCtx.createGain();
+const compressor = audioCtx.createDynamicsCompressor();
+
+masterGain.gain.value = 0.6;
+compressor.threshold.value = -18;
+compressor.knee.value = 24;
+compressor.ratio.value = 4;
+compressor.attack.value = 0.003;
+compressor.release.value = 0.25;
+
+masterGain.connect(compressor);
+compressor.connect(audioCtx.destination);
+
+type Voice = { oscillator: OscillatorNode; gain: GainNode };
+let oscillators = new Map<number, Voice>();
 
 export function isPlaying(note: Note): boolean {
-    return playingNote === note;
+    return oscillators.has(note.frequency);
+}
+
+function updateMasterGain() {
+    const active = oscillators.size;
+    const safe = active > 0 ? 1 / Math.sqrt(active) : 1;
+    masterGain.gain.setTargetAtTime(0.6 * safe, audioCtx.currentTime, 0.01);
 }
 
 function playNote(note: Note) {
     const frequency = note.frequency;
-    oscillator = audioCtx.createOscillator();
+    const oscillator = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
     oscillator.type = "sine";
     oscillator.frequency.setValueAtTime(frequency, audioCtx.currentTime);
-    oscillator.connect(audioCtx.destination);
+    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+    oscillator.connect(gain);
+    gain.connect(masterGain);
     oscillator.start();
-    playingNote = note;
+
+    oscillators.set(frequency, { oscillator, gain });
+    updateMasterGain();
 }
 
-function stopNote() {
-    if (oscillator) {
-        oscillator.stop();
-        oscillator.disconnect();
-        oscillator = null;
+function stopNote(note: Note) {
+    const voice = oscillators.get(note.frequency);
+    if (voice) {
+        voice.oscillator.stop();
+        voice.oscillator.disconnect();
+        voice.gain.disconnect();
     }
-    playingNote = null;
+    oscillators.delete(note.frequency);
+    updateMasterGain();
+}
+
+export function stopAllNotes() {
+    for (const voice of oscillators.values()) {
+        voice.oscillator.stop();
+        voice.oscillator.disconnect();
+        voice.gain.disconnect();
+    }
+    oscillators.clear();
+    updateMasterGain();
 }
 
 export function onMouseDown(p5: p5_, notes: Note[], matrix: Matrix) {
     const note = getClickedNote(p5, notes, matrix);
+
+    if (settings.playMode === "toggle") {
+        if (note) {
+            if (isPlaying(note))
+                stopNote(note);
+            else
+                playNote(note);
+        }
+    }
+    if (settings.playMode === "hold")
     if (note) {
         playNote(note);
     }
@@ -66,5 +113,7 @@ export function onMouseMoved(p5: p5_, notes: Note[], matrix: Matrix) {
     }*/
 }
 export function onMouseUp(p5: p5_) {
-    stopNote();
+    if (settings.playMode === "hold") {
+        stopAllNotes();
+    }
 }

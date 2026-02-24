@@ -98,7 +98,17 @@
         <h3>行列</h3>
         matrix = { a: 1, b: -2, c: 2, d: -3 }
         -->
-    
+
+        <h3>モード</h3>
+        <input type="radio" name="playMode" id="playModeHold" checked> ホールド<br>
+        <input type="radio" name="playMode" id="playModeToggle"> トグル<br>
+        <!--
+        <div style="display: grid; gap:5px 20px; grid-template-columns: auto auto;">
+            <input type="radio" name="playMode" id="playModeHold" checked> <span>ホールド</span>
+            <input type="radio" name="playMode" id="playModeToggle"> <span>トグル</span>
+        </div>
+        -->
+
         <h3>表示範囲</h3>
         <div style="display: grid; gap:5px 20px; grid-template-columns: auto auto;">
             <span style="text-align: center; grid-area: 1 / 1 / 2 / 3;">
@@ -117,8 +127,10 @@
 
         <h3>表示スケール</h3>
         <div style="display: grid; gap:5px 20px; grid-template-columns: auto auto;">
-        <span style="text-align: right;">スケール</span><input type="range" id="scale" min="0" max="200" value="100" style="width:200px;">
-        <span style="text-align: right;">間隔</span><input type="range" id="gap" min="0" max="200" value="100" style="width:200px;">
+            <span style="text-align: right;">スケール</span><input type="range" id="scale" min="0" max="200" value="100"
+                style="width:200px;">
+            <span style="text-align: right;">間隔</span><input type="range" id="gap" min="0" max="200" value="100"
+                style="width:200px;">
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/p5/lib/p5.min.js"></script>

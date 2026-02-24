@@ -1,13 +1,16 @@
 import { Matrix, scaleMatrix } from "./matrix";
 import { makeVal_justIntonation, makeVal_fromP, makeVal_fromQ, Val, makeVal_fromS } from "./monzo";
 import { generateNotes, Note } from "./note";
+import * as player from "./player";
 
 interface GUISettings {
     val: Val,
     notes: Note[],
     matrix: Matrix,
     scaledMatrix: Matrix,
-    size: number
+    size: number,
+
+    playMode: "hold" | "toggle",
 }
 
 export const settings: GUISettings = {
@@ -16,6 +19,7 @@ export const settings: GUISettings = {
     matrix: { a: 1, b: -2, c: 2, d: -3 },
     scaledMatrix: scaleMatrix({ a: 1, b: -2, c: 2, d: -3 }, 100),
     size: 100,
+    playMode: "hold",
 };
 
 function initializeGUI() {
@@ -121,6 +125,7 @@ function updateVal(): void {
         qelm.readOnly = true;
 
         settings.val = val;
+        player.stopAllNotes();
         updateNotes();
         return;
     }
@@ -136,6 +141,7 @@ function updateVal(): void {
         Selm.readOnly = true;
 
         settings.val = val;
+        player.stopAllNotes();
         updateNotes();
         return;
     }
@@ -152,6 +158,7 @@ function updateVal(): void {
         Selm.readOnly = true;
 
         settings.val = val;
+        player.stopAllNotes();
         updateNotes();
         return;
     }
@@ -168,6 +175,7 @@ function updateVal(): void {
         Qelm.readOnly = true;
 
         settings.val = val;
+        player.stopAllNotes();
         updateNotes();
         return;
     }
@@ -191,6 +199,18 @@ function updateNotes() {
         settings.notes = generateNotes(settings.val, baseNoteName, minNoteName, maxNoteName, flatNum, sharpNum);
     } catch (error) {
         console.error("Error generating notes:", error);
+    }
+}
+
+function updatePlayMode() {
+    const holdMode = getInputElement("playModeHold");
+    const toggleMode = getInputElement("playModeToggle");
+    if (holdMode.checked) {
+        settings.playMode = "hold";
+        
+    }
+    else if (toggleMode.checked) {
+        settings.playMode = "toggle";
     }
 }
 
@@ -225,6 +245,9 @@ getInputElement("minNote").addEventListener("input", updateNotes);
 getInputElement("maxNote").addEventListener("input", updateNotes);
 getInputElement("flatNum").addEventListener("input", updateNotes);
 getInputElement("sharpNum").addEventListener("input", updateNotes);
+
+getInputElement("playModeHold").addEventListener("change", updatePlayMode);
+getInputElement("playModeToggle").addEventListener("change", updatePlayMode);
 
 getInputElement("scale").addEventListener("input", updateScale);
 getInputElement("gap").addEventListener("input", updateScale);
