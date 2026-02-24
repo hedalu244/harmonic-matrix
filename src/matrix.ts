@@ -26,8 +26,31 @@ export function applyMatrix(matrix: Matrix, vector: Vector): Vector {
     }
 }
 
+export function multiplyMatrix(left: Matrix, right: Matrix): Matrix {
+    return {
+        a: left.a * right.a + left.c * right.b,
+        b: left.b * right.a + left.d * right.b,
+        c: left.a * right.c + left.c * right.d,
+        d: left.b * right.c + left.d * right.d,
+    }
+}
+
 function determinant(matrix: Matrix): number {
     return matrix.a * matrix.d - matrix.b * matrix.c;
+}
+
+export function invertMatrix(matrix: Matrix): Matrix | null {
+    const det = determinant(matrix);
+    if (det === 0) {
+        return null;
+    }
+    const invDet = 1 / det;
+    return {
+        a: matrix.d * invDet,
+        b: -matrix.b * invDet,
+        c: -matrix.c * invDet,
+        d: matrix.a * invDet,
+    }
 }
 
 export function normalizeMatrix(matrix: Matrix): Matrix {

@@ -41,8 +41,29 @@
       y: matrix.b * vector.x + matrix.d * vector.y
     };
   }
+  function multiplyMatrix(left, right) {
+    return {
+      a: left.a * right.a + left.c * right.b,
+      b: left.b * right.a + left.d * right.b,
+      c: left.a * right.c + left.c * right.d,
+      d: left.b * right.c + left.d * right.d
+    };
+  }
   function determinant(matrix) {
     return matrix.a * matrix.d - matrix.b * matrix.c;
+  }
+  function invertMatrix(matrix) {
+    const det = determinant(matrix);
+    if (det === 0) {
+      return null;
+    }
+    const invDet = 1 / det;
+    return {
+      a: matrix.d * invDet,
+      b: -matrix.b * invDet,
+      c: -matrix.c * invDet,
+      d: matrix.a * invDet
+    };
   }
   function normalizeMatrix(matrix) {
     const det = determinant(matrix);
@@ -472,19 +493,55 @@
       stopAllNotes();
     }
   }
-  function updateMatrix() {
-    const a = parseFloat(getInputElement("matrixA").value);
-    const b = parseFloat(getInputElement("matrixB").value);
-    const c = parseFloat(getInputElement("matrixC").value);
-    const d = parseFloat(getInputElement("matrixD").value);
-    if (isNaN(a) || isNaN(b) || isNaN(c) || isNaN(d)) {
-      console.warn("Invalid input for matrix: ", { a, b, c, d });
+  function updateMatrixLeft() {
+    const m1 = {
+      a: parseFloat(getInputElement("matrix1A").value),
+      b: parseFloat(getInputElement("matrix1B").value),
+      c: parseFloat(getInputElement("matrix1C").value),
+      d: parseFloat(getInputElement("matrix1D").value)
+    };
+    if (isNaN(m1.a) || isNaN(m1.b) || isNaN(m1.c) || isNaN(m1.d)) {
+      console.warn("Invalid input for matrix: ", m1);
       return;
     }
-    if (getInputElement("matrixNormalize").checked)
-      settings.matrix = normalizeMatrix({ a, b, c, d });
-    else
-      settings.matrix = { a, b, c, d };
+    const m2 = multiplyMatrix(settings.matrix, m1);
+    getInputElement("matrix2A").value = m2.a.toString();
+    getInputElement("matrix2B").value = m2.b.toString();
+    getInputElement("matrix2C").value = m2.c.toString();
+    getInputElement("matrix2D").value = m2.d.toString();
+  }
+  function updateMatrix() {
+    const m1 = {
+      a: parseFloat(getInputElement("matrix1A").value),
+      b: parseFloat(getInputElement("matrix1B").value),
+      c: parseFloat(getInputElement("matrix1C").value),
+      d: parseFloat(getInputElement("matrix1D").value)
+    };
+    const m2 = {
+      a: parseFloat(getInputElement("matrix2A").value),
+      b: parseFloat(getInputElement("matrix2B").value),
+      c: parseFloat(getInputElement("matrix2C").value),
+      d: parseFloat(getInputElement("matrix2D").value)
+    };
+    if (isNaN(m1.a) || isNaN(m1.b) || isNaN(m1.c) || isNaN(m1.d)) {
+      console.warn("Invalid input for matrix: ", m1);
+      return;
+    }
+    if (isNaN(m2.a) || isNaN(m2.b) || isNaN(m2.c) || isNaN(m2.d)) {
+      console.warn("Invalid input for matrix: ", m2);
+      return;
+    }
+    const m1Inv = invertMatrix(m1);
+    if (!m1Inv) {
+      console.warn("Invalid input for matrix: not invertible", m1);
+      return;
+    }
+    const transform = multiplyMatrix(m2, m1Inv);
+    if (getInputElement("matrixNormalize").checked) {
+      settings.matrix = normalizeMatrix(transform);
+    } else {
+      settings.matrix = transform;
+    }
     settings.scaledMatrix = scaleMatrix(settings.matrix, settings.gap * settings.scale / 100);
   }
   function updateScale() {
@@ -530,10 +587,15 @@
   getInputElement("sharpNum").addEventListener("input", updateNotes);
   getInputElement("playModeHold").addEventListener("change", updatePlayMode);
   getInputElement("playModeToggle").addEventListener("change", updatePlayMode);
-  getInputElement("matrixA").addEventListener("input", updateMatrix);
-  getInputElement("matrixB").addEventListener("input", updateMatrix);
-  getInputElement("matrixC").addEventListener("input", updateMatrix);
-  getInputElement("matrixD").addEventListener("input", updateMatrix);
+  getInputElement("matrix1A").addEventListener("input", updateMatrixLeft);
+  getInputElement("matrix1B").addEventListener("input", updateMatrixLeft);
+  getInputElement("matrix1C").addEventListener("input", updateMatrixLeft);
+  getInputElement("matrix1D").addEventListener("input", updateMatrixLeft);
+  getInputElement("matrix2A").addEventListener("input", updateMatrix);
+  getInputElement("matrix2B").addEventListener("input", updateMatrix);
+  getInputElement("matrix2C").addEventListener("input", updateMatrix);
+  getInputElement("matrix2D").addEventListener("input", updateMatrix);
+  getInputElement("matrixNormalize").addEventListener("change", updateMatrix);
   getInputElement("scale").addEventListener("input", updateScale);
   getInputElement("gap").addEventListener("input", updateScale);
   getInputElement("showSteps").addEventListener("change", () => {
